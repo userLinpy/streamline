@@ -4,55 +4,57 @@
 |------------|--------------------------------|
 | Numéro     | ADR-001                        |
 | Statut     | Accepté                        |
-| Date       | 2026-04-07                     |
-| Auteur(s)  | Anthony (Zelian)               |
-| Owner      | Anthony (Zelian)               |
-| Décideurs  | Anthony                        |
+| Date       | 2026-06-17                     |
+| Auteur(s)  | Lin                            |
+| Owner      | Lin                            |
+| Décideurs  | Lin                            |
 | Contexte   | Phase 1 — Init projet          |
 | Remplace   | —                              |
 
 ## Contexte
 
-Ce projet a été initialisé avec le template **zelian-starter** du framework Zelian. La stack technique est un monorepo pnpm avec Next.js 16 (App Router + Server Actions), PostgreSQL 16, Prisma 6 (multiSchema avec RLS), et Supabase Cloud pour l'authentification JWT uniquement. Ce canevas sera complété en Phase 2 avec les justifications détaillées.
+Streamline est un cockpit de veille technologique qui agrège des données de GitHub et Dev.to. Le projet nécessite une stack capable de :
+- Appeler des APIs externes avec des tokens secrets (sécurité)
+- Afficher rapidement beaucoup de cartes (performance)
+- Être simple à apprendre et maintenir
 
 ## Stack retenue
 
 ### Frontend
-- Next.js 16 (App Router, React 19) — TypeScript 5 strict
-- Zod v4 (validation)
-- Aucun framework CSS — fourni par le Design
+- **Next.js 15+** (App Router, React 19) — TypeScript 5 strict
+- **Tailwind CSS 4** — styling utilitaire
+- **Zod v4** — validation des réponses API
 
 ### Backend
-- Node.js 20 via Next.js Server Actions (mutations) + Route Handlers (webhooks)
-- Prisma 6 multiSchema (public + onboarding)
-- 2 clients : prismaUser (RLS) + prismaService (bypass)
-- pdf-lib, Resend v4, AES-256-GCM, Better Stack
+- **Node.js 20** via Next.js Server Components (appels API externes)
+- **Route Handlers** pour les endpoints internes (`/api/...`)
+- **Pas de base de données** pour le MVP — données exclusivement depuis APIs externes
 
-### Base de données
-- PostgreSQL 16 (Docker local port 5433)
-- 2 schémas : public (users, permissions) + onboarding (parcours, steps, etc.)
-- RLS via wrapper withRLS()
+### APIs externes
+- **GitHub API** — repositories trending (Personal Access Token)
+- **Dev.to API** — articles techniques (clé API optionnelle)
 
 ### Auth
-- Supabase Cloud (auth JWT uniquement, ne touche pas à la BDD)
-- MFA/TOTP (AAL2 pour manage_permissions)
+- **Aucune** pour le MVP — application publique en lecture seule
 
 ### Infra
-- Prod : Hetzner VPS CX23 + Coolify + Caddy + Cloudflare DNS
-- CI/CD : GitHub Actions → types → tsc → vitest → prisma migrate → build → Coolify
+- **À définir** — Vercel recommandé (intégration native Next.js)
 
 ## Options considérées
 
-> À compléter en Phase 2.
-
-| Option | Description | Effort estimé | Avantages | Inconvénients |
-|--------|-------------|---------------|-----------|---------------|
-| — | — | — | — | — |
+| Option | Avantages | Inconvénients |
+|--------|-----------|---------------|
+| Next.js 15 (choisi) | App Router moderne, Server Components natifs, sécurité tokens côté serveur | Courbe d'apprentissage App Router |
+| Create React App | Simple | Pas de Server Components, tokens exposés côté client |
+| Nuxt.js | Similaire à Next.js | Écosystème Vue, moins de ressources |
 
 ## Option choisie
 
-> À compléter en Phase 2.
+**Next.js 15 + TypeScript + Tailwind CSS** — combinaison qui permet de sécuriser les tokens API côté serveur via Server Components, tout en offrant une DX moderne et un écosystème riche.
 
 ## Conséquences
 
-> À compléter en Phase 2.
+- Les appels GitHub API et Dev.to API se font **uniquement côté serveur** (tokens jamais exposés)
+- Tailwind CSS remplace tout CSS custom
+- Pas de base de données à maintenir pour le MVP (simplification majeure)
+- Possibilité d'ajouter une BDD plus tard pour les favoris (bookmarks)
