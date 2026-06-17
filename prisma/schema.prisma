@@ -1,0 +1,43 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public", "onboarding"]
+}
+
+// ============================================================
+// Schéma PUBLIC — users, permissions
+// ============================================================
+
+// À définir en Phase 2 (ADR-003)
+// Exemple :
+// model User {
+//   id         String   @id @default(cuid())
+//   email      String   @unique
+//   name       String?
+//   role       String   @default("user")
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+//
+//   @@schema("public")
+// }
+
+// ============================================================
+// Schéma ONBOARDING — parcours, steps, signatures, email_logs, profiles
+// ============================================================
+
+// À définir en Phase 2 (ADR-003)
+// Exemple :
+// model Parcours {
+//   id          String   @id @default(cuid())
+//   user_id     String
+//   status      String   @default("draft")
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
+//
+//   @@schema("onboarding")
+// }

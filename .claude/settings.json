@@ -1,0 +1,13 @@
+{
+  "enabledPlugins": {
+    "zelian-framework@zelian-marketplace": true
+  },
+  "extraKnownMarketplaces": [
+    {
+      "name": "zelian-marketplace",
+      "source": "github",
+      "repo": "zelian-codespace/zelian-framework",
+      "autoUpdatesChannel": "latest"
+    }
+  ]
+}

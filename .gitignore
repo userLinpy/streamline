@@ -1,0 +1,54 @@
+# === Zelian Framework ===
+.claude/.session-start-sha
+.claude/.quality-score.log
+.claude/.events.log
+
+# === Environnement ===
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# === Node.js / pnpm ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.pnpm-store/
+dist/
+build/
+.next/
+out/
+
+# === PostgreSQL / SQLite ===
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+
+# === Prisma ===
+prisma/*.db
+prisma/*.db-journal
+
+# === Supabase ===
+supabase/.temp/
+
+# === Tests ===
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === OS / Temp ===
+*.log
+*.tmp
+*.bak

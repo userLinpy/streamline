@@ -1,0 +1,35 @@
+{
+  "name": "@zelian/app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --port 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@zelian/shared": "workspace:*",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@supabase/supabase-js": "^2.45.0",
+    "@supabase/ssr": "^0.5.0",
+    "@prisma/client": "^6.0.0",
+    "zod": "^3.24.0",
+    "pdf-lib": "^1.17.0",
+    "resend": "^4.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@playwright/test": "^1.58.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.0.0"
+  },
+  "NOTE": "AUCUNE dépendance de styling/design dans ce template. Le framework CSS (Tailwind, Bootstrap, etc.), les composants UI, icônes, toasts, etc. seront ajoutés par le Design choisi via /zelian:init zelian-starter <DESIGN>"
+}
