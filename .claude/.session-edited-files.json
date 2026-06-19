@@ -1,0 +1,28 @@
+{
+  "files": [
+    "docs/specs/dashboard/spec-fonctionnel.md",
+    "docs/specs/dashboard/spec-technique.md",
+    "docs/specs/dashboard/VERSIONNING.md",
+    "docs/specs/dashboard/tech-design.md",
+    "docs/specs/github-feed/spec-fonctionnel.md",
+    "docs/specs/github-feed/spec-technique.md",
+    "docs/specs/github-feed/VERSIONNING.md",
+    "docs/specs/github-feed/tech-design.md",
+    "docs/specs/devto-feed/spec-fonctionnel.md",
+    "docs/specs/devto-feed/spec-technique.md",
+    "docs/specs/devto-feed/VERSIONNING.md",
+    "docs/specs/devto-feed/tech-design.md",
+    "docs/specs/search/spec-fonctionnel.md",
+    "docs/specs/search/spec-technique.md",
+    "docs/specs/search/VERSIONNING.md",
+    "docs/specs/search/tech-design.md",
+    "docs/specs/bookmarks/spec-fonctionnel.md",
+    "docs/specs/bookmarks/spec-technique.md",
+    "docs/specs/bookmarks/VERSIONNING.md",
+    "docs/specs/bookmarks/tech-design.md",
+    "packages/app/package.json",
+    "packages/app/next.config.ts",
+    "vitest.config.ts",
+    "package.json"
+  ]
+}
