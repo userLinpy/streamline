@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* Styles pour le contenu rendu (article Dev.to + README GitHub) */
+.article-body {
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: #374151;
+}
+.article-body h1,
+.article-body h2,
+.article-body h3,
+.article-body h4 {
+  font-weight: 700;
+  color: #18181b;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+.article-body h1 { font-size: 1.25rem; border-bottom: 1px solid #e4e4e7; padding-bottom: 0.5rem; }
+.article-body h2 { font-size: 1.1rem; }
+.article-body h3 { font-size: 1rem; }
+.article-body p { margin-bottom: 0.875rem; }
+.article-body ul,
+.article-body ol { padding-left: 1.5rem; margin-bottom: 0.875rem; }
+.article-body li { margin-bottom: 0.25rem; }
+.article-body pre {
+  background: #1e1e2e;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+.article-body code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8125rem;
+  color: #a6e3a1;
+}
+.article-body p code,
+.article-body li code {
+  background: #f4f4f5;
+  color: #dc2626;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+}
+.article-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 0.75rem 0;
+}
+.article-body a { color: #4f46e5; text-decoration: underline; }
+.article-body blockquote {
+  border-left: 3px solid #c7d2fe;
+  padding-left: 1rem;
+  color: #52525b;
+  margin: 1rem 0;
+}
