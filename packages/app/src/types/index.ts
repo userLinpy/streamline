@@ -1,0 +1,13 @@
+export type TechItem = {
+  id: string
+  source: 'github' | 'devto'
+  title: string
+  description: string
+  url: string
+  tags: string[]
+  stars: number
+  readTime: number
+  publishedAt: string
+  ownerAvatar?: string
+  coverInitials: string
+}
