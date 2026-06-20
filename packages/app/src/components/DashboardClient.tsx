@@ -1,33 +1,75 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { TechItem } from '@/types'
 import { TechCard } from './TechCard'
+import { FilterPanel } from './FilterPanel'
 import { useReadLater } from '@/hooks/useReadLater'
 import { useFavorites } from '@/hooks/useFavorites'
+import { useFilters } from '@/hooks/useFilters'
+import { useWatchedRepos } from '@/hooks/useWatchedRepos'
 
-type Tab = 'devto' | 'github' | 'all' | 'readlater' | 'favorites'
+type Tab = 'news' | 'github' | 'all' | 'readlater' | 'favorites'
 
 type Props = { items: TechItem[] }
 
 export function DashboardClient({ items }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>('devto')
+  const [activeTab, setActiveTab] = useState<Tab>('news')
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<TechItem[] | null>(null)
   const [searching, setSearching] = useState(false)
   const [searchError, setSearchError] = useState(false)
+  const [customReleases, setCustomReleases] = useState<TechItem[]>([])
 
   const { readLaterItems } = useReadLater()
   const { favorites } = useFavorites()
+  const { filters, toggleSource, toggleTag, addCustomTag, removeCustomTag } = useFilters()
+  const { customRepos, addRepo, removeRepo } = useWatchedRepos()
 
-  const baseItems = (() => {
-    if (activeTab === 'devto') return items.filter(i => i.source === 'devto')
-    if (activeTab === 'github') return items.filter(i => i.source === 'github')
+  // Load releases for custom repos client-side
+  useEffect(() => {
+    if (customRepos.length === 0) {
+      setCustomReleases([])
+      return
+    }
+    const reposParam = customRepos.join(',')
+    fetch(`/api/releases?repos=${encodeURIComponent(reposParam)}`)
+      .then(r => r.json() as Promise<TechItem[]>)
+      .then(data => setCustomReleases(data))
+      .catch(() => setCustomReleases([]))
+  }, [customRepos])
+
+  const allItems = [...items, ...customReleases]
+
+  // 1. Filter by source (toggles)
+  const filteredBySource = allItems.filter(item => filters.sources[item.source])
+
+  // 2. Filter by active tag (OR logic, case-insensitive)
+  const filteredByTag = filteredBySource.filter(item => {
+    if (filters.activeTags.length === 0) return true
+    return filters.activeTags.some(activeTag =>
+      item.tags.some(tag => tag.toLowerCase() === activeTag.toLowerCase())
+    )
+  })
+
+  // 3. Filter by tab
+  const baseItems: TechItem[] = (() => {
+    if (activeTab === 'news') {
+      return filteredByTag.filter(
+        i => i.source === 'devto' || i.source === 'hackernews'
+      )
+    }
+    if (activeTab === 'github') {
+      return filteredByTag.filter(
+        i => i.source === 'github' || i.source === 'github-release'
+      )
+    }
     if (activeTab === 'readlater') return readLaterItems
     if (activeTab === 'favorites') return favorites
-    return items
+    return filteredByTag
   })()
 
+  // 4. Filter by local search
   const displayItems =
     searchResults ??
     baseItems.filter(item => {
@@ -77,21 +119,24 @@ export function DashboardClient({ items }: Props) {
     activeClass: string
   }[] = [
     {
-      id: 'devto',
-      label: '✍ Dev.to',
-      count: items.filter(i => i.source === 'devto').length,
+      id: 'news',
+      label: '✍ News',
+      count: allItems.filter(i => i.source === 'devto' || i.source === 'hackernews')
+        .length,
       activeClass: 'bg-indigo-600 text-white',
     },
     {
       id: 'github',
       label: '★ GitHub',
-      count: items.filter(i => i.source === 'github').length,
+      count: allItems.filter(
+        i => i.source === 'github' || i.source === 'github-release'
+      ).length,
       activeClass: 'bg-green-600 text-white',
     },
     {
       id: 'all',
       label: '⊞ Tout',
-      count: items.length,
+      count: allItems.length,
       activeClass: 'bg-zinc-600 text-white',
     },
     {
@@ -120,7 +165,7 @@ export function DashboardClient({ items }: Props) {
           value={query}
           onChange={e => handleQueryChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Rechercher… (Entrée = recherche étendue sans filtre de date)"
+          placeholder="Rechercher… (Entrée = recherche étendue)"
           className="flex-1 bg-zinc-50 border border-zinc-200 rounded-lg px-3 py-2 text-sm text-zinc-700 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-300 min-w-0"
         />
         {searching && (
@@ -128,7 +173,7 @@ export function DashboardClient({ items }: Props) {
         )}
       </header>
 
-      {/* Onglets */}
+      {/* Tabs */}
       <div className="bg-white border-b border-zinc-100 px-3 py-2 flex gap-1.5 flex-wrap">
         {tabs.map(tab => (
           <button
@@ -157,7 +202,19 @@ export function DashboardClient({ items }: Props) {
         ))}
       </div>
 
-      {/* Contenu */}
+      {/* Filters */}
+      <FilterPanel
+        filters={filters}
+        onToggleSource={toggleSource}
+        onToggleTag={toggleTag}
+        onAddCustomTag={addCustomTag}
+        onRemoveCustomTag={removeCustomTag}
+        customRepos={customRepos}
+        onAddRepo={addRepo}
+        onRemoveRepo={removeRepo}
+      />
+
+      {/* Content */}
       <main className="p-3">
         {searchError && (
           <div className="mb-3 text-center text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg py-2">
@@ -165,7 +222,7 @@ export function DashboardClient({ items }: Props) {
           </div>
         )}
 
-        {items.length === 0 &&
+        {allItems.length === 0 &&
           activeTab !== 'readlater' &&
           activeTab !== 'favorites' && (
             <div className="text-center py-16 text-zinc-400">
@@ -184,8 +241,8 @@ export function DashboardClient({ items }: Props) {
             </p>
             <p className="text-sm">
               {activeTab === 'readlater'
-                ? "Aucun article à lire — clique sur 🔖 dans une carte pour sauvegarder"
-                : "Aucun favori — clique sur ⭐ dans une carte pour ajouter aux favoris"}
+                ? 'Aucun article à lire — clique sur 🔖 dans une carte pour sauvegarder'
+                : 'Aucun favori — clique sur ⭐ dans une carte pour ajouter aux favoris'}
             </p>
           </div>
         ) : (
