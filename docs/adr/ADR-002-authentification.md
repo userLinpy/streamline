@@ -18,7 +18,7 @@
 | Catégorie | AUTH |
 | Q1 — Coût de revert > 1j ? | OUI — déplacer les appels API du serveur vers le client exposerait les tokens et nécessiterait une refonte de toute la couche data |
 | Q2 — Non-déductible du code ? | OUI — la décision de ne jamais préfixer `NEXT_PUBLIC_` les tokens ne se voit pas dans `package.json` |
-| Q3 — Impact transverse (≥ 2 specs) ? | OUI — concerne github-feed, devto-feed, et tout futur module API |
+| Q3 — Impact transverse (≥ 2 specs) ? | OUI — concerne github-feed (trending + releases), devto-feed, hackernews-feed (via Algolia, pas de token mais même pattern serveur), search, et tout futur module API |
 | Q4 — Casse un invariant si ignoré ? | OUI — un développeur qui expose un token via `NEXT_PUBLIC_GITHUB_TOKEN` crée une faille de sécurité immédiate |
 
 > ✅ Validé contre la politique `.claude/rules/06-adr-policy.md`.
@@ -33,8 +33,9 @@ Streamline appelle des APIs tierces (GitHub, Dev.to) avec des clés secrètes. C
 
 ```bash
 # .env.local — jamais commité, jamais exposé
-GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx
-DEVTO_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxx   # GitHub trending + GitHub Releases
+DEVTO_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxx  # Dev.to (optionnel)
+# Hacker News via Algolia : pas de token (API publique)
 ```
 
 ## Options considérées
@@ -51,6 +52,18 @@ DEVTO_API_KEY=xxxxxxxxxxxxxxxxxxxxxxxx
 
 ## Conséquences
 
-- Tout composant qui appelle GitHub ou Dev.to doit être un Server Component (pas de `"use client"`)
+- Tout composant qui appelle GitHub, Dev.to, GitHub Releases ou Hacker News doit être un Server Component (pas de `"use client"`)
+- Le Route Handler `GET /api/releases` suit ce même principe : il s'exécute côté serveur et injecte `GITHUB_TOKEN` sans l'exposer
 - `.env.local` est dans `.gitignore` — un fichier `.env.example` documente les variables requises
 - Si un futur module nécessite des appels API côté client, utiliser un Route Handler comme proxy
+
+## Modules concernés (mis à jour 2026-06-20)
+
+| Module / fichier | Token utilisé |
+|---|---|
+| `lib/github.ts` | `GITHUB_TOKEN` |
+| `lib/github-releases.ts` | `GITHUB_TOKEN` |
+| `lib/devto.ts` | `DEVTO_API_KEY` (optionnel) |
+| `lib/hackernews.ts` | aucun (Algolia public) |
+| `app/api/releases/route.ts` | `GITHUB_TOKEN` (via `fetchGitHubReleases`) |
+| `app/api/search/route.ts` | `GITHUB_TOKEN` + `DEVTO_API_KEY` |

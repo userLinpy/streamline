@@ -3,24 +3,29 @@
 | Champ | Valeur |
 |---|---|
 | **Feature** | bookmarks |
-| **Statut** | Brouillon |
-| **Date** | 2026-06-17 |
+| **Statut** | Implémenté |
+| **Date** | 2026-06-19 |
 | **Auteur** | Lin |
-| **Version** | 0.1.0 |
+| **Version** | 0.2.0 |
 
 ---
 
 ## Architecture
 
-Hook custom `useBookmarks` côté client. Expose `bookmarks`, `addBookmark`, `removeBookmark`, `isBookmarked`. Utilisé par `TechCard` et la page `/bookmarks`.
+Deux hooks localStorage distincts côté client, consommés par `TechCard` et `DashboardClient`.
+
+- `useReadLater` — gère la liste "À lire plus tard" (clé `streamline_read_later`)
+- `useFavorites` — gère la liste "Favoris" (clé `streamline_favorites`)
+
+Chaque hook expose un pattern identique : hydratation depuis localStorage au montage (`useEffect`), puis lecture/écriture synchrone à chaque mutation.
 
 ## Fichiers
 
 | Fichier | Rôle |
 |---|---|
-| `packages/app/src/hooks/useBookmarks.ts` | Hook custom — lecture/écriture localStorage |
-| `packages/app/src/app/bookmarks/page.tsx` | Page `/bookmarks` — Client Component |
-| `packages/app/src/components/TechCard.tsx` | Bouton bookmark intégré |
+| `packages/app/src/hooks/useReadLater.ts` | Hook "À lire plus tard" — localStorage `streamline_read_later` |
+| `packages/app/src/hooks/useFavorites.ts` | Hook "Favoris" — localStorage `streamline_favorites` |
+| `packages/app/src/components/TechCard.tsx` | Boutons bookmark (🔖) et favori (⭐) intégrés |
 | `packages/app/src/types/index.ts` | Type `TechItem` |
 
 ## Schema BDD
@@ -28,56 +33,68 @@ Hook custom `useBookmarks` côté client. Expose `bookmarks`, `addBookmark`, `re
 Aucun — `localStorage` uniquement.
 
 ```
-localStorage key : "streamline_bookmarks"
+localStorage key : "streamline_read_later"
+value : JSON.stringify(TechItem[])
+
+localStorage key : "streamline_favorites"
 value : JSON.stringify(TechItem[])
 ```
 
-## Hook useBookmarks
+## Hook useReadLater
 
 ```typescript
 'use client'
-
-import { useState, useEffect } from 'react'
-import type { TechItem } from '@/types'
-
-const STORAGE_KEY = 'streamline_bookmarks'
-
-export function useBookmarks() {
-  const [bookmarks, setBookmarks] = useState<TechItem[]>([])
+export function useReadLater() {
+  const [readLaterItems, setReadLaterItems] = useState<TechItem[]>([])
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) setBookmarks(JSON.parse(stored))
-    } catch {}
+      const stored = localStorage.getItem('streamline_read_later')
+      if (stored) setReadLaterItems(JSON.parse(stored) as TechItem[])
+    } catch { setReadLaterItems([]) }
   }, [])
 
-  const save = (items: TechItem[]) => {
-    setBookmarks(items)
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-    } catch (e) {
-      console.error('localStorage full', e)
-    }
-  }
-
-  const addBookmark = (item: TechItem) => {
-    if (!bookmarks.find((b) => b.id === item.id)) save([...bookmarks, item])
-  }
-
-  const removeBookmark = (id: string) => {
-    save(bookmarks.filter((b) => b.id !== id))
-  }
-
-  const isBookmarked = (id: string) => bookmarks.some((b) => b.id === id)
-
-  return { bookmarks, addBookmark, removeBookmark, isBookmarked }
+  // addToReadLater(item) — déduplique par id
+  // removeFromReadLater(id)
+  // isInReadLater(id) → boolean
+  return { readLaterItems, addToReadLater, removeFromReadLater, isInReadLater }
 }
 ```
 
+## Hook useFavorites
+
+```typescript
+'use client'
+export function useFavorites() {
+  const [favorites, setFavorites] = useState<TechItem[]>([])
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('streamline_favorites')
+      if (stored) setFavorites(JSON.parse(stored) as TechItem[])
+    } catch { setFavorites([]) }
+  }, [])
+
+  // addFavorite(item) — déduplique par id
+  // removeFavorite(id)
+  // isFavorite(id) → boolean
+  return { favorites, addFavorite, removeFavorite, isFavorite }
+}
+```
+
+## Comportement TechCard
+
+Bouton bookmark (Bookmark Lucide, amber) : toggle `addToReadLater` / `removeFromReadLater`.
+Bouton favori (Star Lucide, rose) : toggle `addFavorite` / `removeFavorite`.
+Les deux états sont visuellement distincts (rempli = actif, outline = inactif).
+
 ## Tests
 
-- [ ] Unitaire : `addBookmark` ajoute un item et ne duplique pas
-- [ ] Unitaire : `removeBookmark` retire l'item correct
-- [ ] Unitaire : `isBookmarked` retourne true/false correctement
-- [ ] Unitaire : hydratation depuis localStorage au montage
+- [ ] Unitaire : `addToReadLater` ajoute un item et ne duplique pas
+- [ ] Unitaire : `removeFromReadLater` retire l'item correct
+- [ ] Unitaire : `isInReadLater` retourne true/false correctement
+- [ ] Unitaire : `addFavorite` ajoute un item et ne duplique pas
+- [ ] Unitaire : `removeFavorite` retire l'item correct
+- [ ] Unitaire : `isFavorite` retourne true/false correctement
+- [ ] Unitaire : hydratation depuis localStorage au montage (les deux hooks)
+- [ ] Unitaire : erreur localStorage silencieuse → état initial vide
