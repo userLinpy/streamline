@@ -3,8 +3,9 @@ import { ArrowLeft, ExternalLink, Clock } from 'lucide-react'
 import { formatRelativeDate, formatStars } from '@/lib/utils'
 import type { DevToArticleRaw } from '@/lib/devto'
 
-type DevToArticleDetail = DevToArticleRaw & {
+type DevToArticleDetail = Omit<DevToArticleRaw, 'tag_list'> & {
   body_html: string
+  tag_list: string | string[] // detail endpoint returns CSV string, list endpoint returns array
   user: {
     name: string
     username: string
@@ -42,6 +43,13 @@ export default async function ArticlePage({ params }: Params) {
 
   const article: DevToArticleDetail = await res.json()
 
+  // Dev.to detail endpoint returns tag_list as a CSV string, not an array
+  const tagList: string[] = Array.isArray(article.tag_list)
+    ? article.tag_list
+    : typeof article.tag_list === 'string' && article.tag_list
+      ? article.tag_list.split(',').map(t => t.trim()).filter(Boolean)
+      : []
+
   return (
     <div className="min-h-screen bg-zinc-50 pb-8">
       {/* Header */}
@@ -76,9 +84,9 @@ export default async function ArticlePage({ params }: Params) {
               </span>
             )}
           </div>
-          {article.tag_list.length > 0 && (
+          {tagList.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-3">
-              {article.tag_list.map(tag => (
+              {tagList.map(tag => (
                 <span key={tag} className="bg-zinc-100 text-zinc-500 text-[10px] px-1.5 py-0.5 rounded">
                   {tag}
                 </span>
