@@ -3,71 +3,128 @@
 import { Bookmark, Star, Clock } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
 import type { TechItem } from '@/types'
 import { useReadLater } from '@/hooks/useReadLater'
 import { useFavorites } from '@/hooks/useFavorites'
 import { formatRelativeDate, formatStars } from '@/lib/utils'
+import { getIconSlug, getIconData } from '@/lib/icons'
 
 type Props = { item: TechItem }
+
+const SOURCE_BADGE: Record<
+  TechItem['source'],
+  { label: string; bg: string; textColor: string; borderColor: string }
+> = {
+  github: {
+    label: '★ GitHub',
+    bg: 'bg-green-50',
+    textColor: 'text-green-700',
+    borderColor: 'border-green-200',
+  },
+  devto: {
+    label: '✍ Dev.to',
+    bg: 'bg-indigo-50',
+    textColor: 'text-indigo-700',
+    borderColor: 'border-indigo-200',
+  },
+  'github-release': {
+    label: '📦 Release',
+    bg: 'bg-purple-50',
+    textColor: 'text-purple-700',
+    borderColor: 'border-purple-200',
+  },
+  hackernews: {
+    label: '🔶 HN',
+    bg: 'bg-orange-50',
+    textColor: 'text-orange-700',
+    borderColor: 'border-orange-200',
+  },
+}
+
+function getDetailPath(item: TechItem): string {
+  if (item.source === 'github') {
+    return `/repo/${item.id.replace(/^gh-/, '')}`
+  }
+  if (item.source === 'devto') {
+    return `/article/${item.id.replace(/^dt-/, '')}`
+  }
+  if (item.source === 'github-release') {
+    const releaseId = item.id.replace(/^gr-/, '')
+    // title = 'owner/repo v1.2.3' — extract owner/repo (before last space)
+    const spaceIdx = item.title.lastIndexOf(' ')
+    const fullName = item.title.slice(0, spaceIdx)
+    return `/release/${fullName}/${releaseId}`
+  }
+  // hackernews
+  return `/hn/${item.id.replace(/^hn-/, '')}`
+}
 
 export function TechCard({ item }: Props) {
   const { isInReadLater, addToReadLater, removeFromReadLater } = useReadLater()
   const { isFavorite, addFavorite, removeFavorite } = useFavorites()
+  const [pngError, setPngError] = useState(false)
 
   const inReadLater = isInReadLater(item.id)
   const inFavorites = isFavorite(item.id)
-  const numericId = item.id.replace(/^(gh|dt)-/, '')
-  const detailPath =
-    item.source === 'github' ? `/repo/${numericId}` : `/article/${numericId}`
-  const isGitHub = item.source === 'github'
+  const detailPath = getDetailPath(item)
+  const badge = SOURCE_BADGE[item.source]
+  const iconSlug = getIconSlug(item)
+  const iconData = iconSlug ? getIconData(iconSlug) : null
+  const pngSrc = iconSlug ? `/logos/${iconSlug}.png` : null
+  const useOwnerAvatar =
+    (item.source === 'github' || item.source === 'github-release') &&
+    !!item.ownerAvatar
 
   return (
     <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm flex flex-col hover:shadow-md transition-shadow">
       {/* Cover */}
       <div
-        className={`relative h-20 flex items-center justify-center border-b border-zinc-100 ${
-          isGitHub ? 'bg-green-50' : 'bg-indigo-50'
-        }`}
+        className={`relative h-20 flex items-center justify-center border-b border-zinc-100 ${badge.bg}`}
       >
-        {/* Badge source */}
+        {/* Source badge */}
         <span
-          className={`absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white ${
-            isGitHub
-              ? 'text-green-700 border-green-200'
-              : 'text-indigo-700 border-indigo-200'
-          }`}
+          className={`absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white ${badge.textColor} ${badge.borderColor}`}
         >
-          {isGitHub ? '★ GitHub' : '✍ Dev.to'}
+          {badge.label}
         </span>
 
-        {/* Logo / initiales */}
+        {/* Logo: PNG override → SVG simple-icons → ownerAvatar → coverInitials */}
         <div className="w-10 h-10 rounded-lg bg-white border border-zinc-200 shadow flex items-center justify-center overflow-hidden">
-          {item.ownerAvatar ? (
+          {pngSrc && !pngError ? (
             <Image
-              src={item.ownerAvatar}
+              src={pngSrc}
+              alt={iconSlug ?? item.title}
+              width={40}
+              height={40}
+              className="rounded-lg object-cover"
+              onError={() => setPngError(true)}
+            />
+          ) : iconData ? (
+            <div
+              dangerouslySetInnerHTML={{ __html: iconData.svg }}
+              style={{ color: `#${iconData.hex}`, width: 24, height: 24 }}
+            />
+          ) : useOwnerAvatar ? (
+            <Image
+              src={item.ownerAvatar!}
               alt={item.title}
               width={40}
               height={40}
               className="rounded-lg object-cover"
             />
           ) : (
-            <span
-              className={`text-xs font-bold ${
-                isGitHub ? 'text-green-700' : 'text-indigo-700'
-              }`}
-            >
+            <span className={`text-xs font-bold ${badge.textColor}`}>
               {item.coverInitials}
             </span>
           )}
         </div>
 
-        {/* Boutons d'action */}
+        {/* Action buttons */}
         <div className="absolute top-2 right-2 flex gap-1">
           <button
             onClick={() =>
-              inReadLater
-                ? removeFromReadLater(item.id)
-                : addToReadLater(item)
+              inReadLater ? removeFromReadLater(item.id) : addToReadLater(item)
             }
             className={`w-7 h-7 rounded-md flex items-center justify-center border shadow-sm transition-colors ${
               inReadLater
@@ -94,7 +151,7 @@ export function TechCard({ item }: Props) {
         </div>
       </div>
 
-      {/* Corps */}
+      {/* Body */}
       <div className="p-3 flex-1">
         <Link
           href={detailPath}
@@ -124,13 +181,14 @@ export function TechCard({ item }: Props) {
             {formatRelativeDate(item.publishedAt)}
           </span>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-amber-600">
-              ★ {formatStars(item.stars)}
-            </span>
+            {item.stars > 0 && (
+              <span className="text-[10px] text-amber-600">
+                ★ {formatStars(item.stars)}
+              </span>
+            )}
             {item.readTime > 0 && (
               <span className="text-[10px] text-indigo-500 flex items-center gap-0.5">
                 <Clock size={9} />
-                {isGitHub ? '~' : ''}
                 {item.readTime} min
               </span>
             )}
