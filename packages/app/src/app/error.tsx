@@ -15,11 +15,13 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
       <div className="text-center max-w-sm px-4">
         <p className="text-3xl mb-3">⚠️</p>
-        <p className="text-sm font-medium text-zinc-700 mb-1">Une erreur est survenue</p>
-        <p className="text-xs text-zinc-400 mb-6">
+        <p className="text-sm font-medium text-zinc-700 dark:text-zinc-200 mb-1">
+          Une erreur est survenue
+        </p>
+        <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-6">
           {error.message ?? 'Impossible de charger cette page.'}
         </p>
         <div className="flex gap-3 justify-center">
@@ -31,7 +33,7 @@ export default function Error({
           </button>
           <Link
             href="/"
-            className="text-xs text-zinc-600 px-4 py-2 border border-zinc-200 rounded-lg hover:bg-zinc-100 transition-colors"
+            className="text-xs text-zinc-600 dark:text-zinc-300 px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
           >
             ← Retour
           </Link>

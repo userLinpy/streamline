@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, MessageSquare, Star } from 'lucide-react'
+import { AISummary } from '@/components/AISummary'
 
 type HNItemDetail = {
   objectID: string
@@ -34,14 +35,13 @@ export default async function HNItemPage({
 
   if (!item) {
     return (
-      <div className="min-h-screen bg-zinc-50 p-8">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-700 mb-8"
-        >
-          <ArrowLeft size={16} /> Retour
-        </Link>
-        <p className="text-zinc-500">Article introuvable.</p>
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-3">Article introuvable.</p>
+          <Link href="/" className="text-indigo-600 dark:text-indigo-400 text-sm hover:underline">
+            ← Retour au dashboard
+          </Link>
+        </div>
       </div>
     )
   }
@@ -49,22 +49,29 @@ export default async function HNItemPage({
   const hnDiscussionUrl = `https://news.ycombinator.com/item?id=${id}`
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <div className="max-w-3xl mx-auto p-6">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-8">
+      {/* Header */}
+      <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400">
+          ⚡ Streamline
+        </span>
         <Link
           href="/"
-          className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-700 mb-8"
+          className="ml-auto flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
         >
-          <ArrowLeft size={16} /> Retour au dashboard
+          <ArrowLeft size={12} />
+          Retour
         </Link>
+      </header>
 
-        <div className="bg-white rounded-xl border border-zinc-200 p-6">
+      <div className="max-w-3xl mx-auto p-4">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
           <div className="flex items-start gap-2 mb-2">
             <span className="text-orange-500 text-lg font-bold shrink-0">▲</span>
-            <h1 className="text-xl font-bold text-zinc-900">{item.title}</h1>
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">{item.title}</h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 mb-6">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 dark:text-zinc-500 mb-6">
             <span className="flex items-center gap-1">
               <Star size={11} className="text-amber-500" />
               {item.points} points
@@ -83,9 +90,16 @@ export default async function HNItemPage({
             </span>
           </div>
 
+          <div className="mb-6">
+            <AISummary
+              title={item.title}
+              text={(item.story_text ?? '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 3000)}
+            />
+          </div>
+
           {item.story_text && (
             <div
-              className="text-sm text-zinc-700 mb-6 leading-relaxed [&_p]:mb-2 [&_a]:text-indigo-600 [&_a]:underline"
+              className="text-sm text-zinc-700 dark:text-zinc-300 mb-6 leading-relaxed [&_p]:mb-2 [&_a]:text-indigo-600 dark:[&_a]:text-indigo-400 [&_a]:underline"
               dangerouslySetInnerHTML={{ __html: item.story_text }}
             />
           )}
@@ -105,7 +119,7 @@ export default async function HNItemPage({
               href={hnDiscussionUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm bg-zinc-100 text-zinc-700 px-4 py-2 rounded-lg hover:bg-zinc-200 transition-colors border border-zinc-200"
+              className="flex items-center gap-1.5 text-sm bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 px-4 py-2 rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors border border-zinc-200 dark:border-zinc-700"
             >
               <MessageSquare size={14} /> Discussion HN
             </a>

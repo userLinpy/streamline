@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { transformHit } from './hackernews'
+import { transformHit } from '@/lib/hackernews'
+import type { HNHit } from '@/lib/hackernews'
 
-const MOCK_HIT = {
+const MOCK_HIT: HNHit = {
   objectID: '38765432',
   title: 'Python 3.14 released',
   url: 'https://python.org/news',
@@ -13,7 +14,7 @@ const MOCK_HIT = {
   story_id: null,
 }
 
-const MOCK_HIT_WITH_TEXT = {
+const MOCK_HIT_WITH_TEXT: HNHit = {
   objectID: '38765433',
   title: 'Ask HN: Best resources for learning Rust?',
   url: null,
@@ -77,7 +78,7 @@ describe('transformHit', () => {
     expect(item.coverInitials).toBe('P3R')
   })
 
-  it('should set description from story_text when url is null', () => {
+  it('should set description from story_text when present', () => {
     const item = transformHit(MOCK_HIT_WITH_TEXT)
     expect(item.description).toContain('Looking for resources')
   })

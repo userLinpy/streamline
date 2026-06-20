@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:is(.dark *));
 
 /* Styles pour le contenu rendu (article Dev.to + README GitHub) */
 .article-body {
@@ -56,3 +57,15 @@
   color: #52525b;
   margin: 1rem 0;
 }
+
+/* Dark mode overrides for article-body */
+.dark .article-body { color: #d4d4d8; }
+.dark .article-body h1,
+.dark .article-body h2,
+.dark .article-body h3,
+.dark .article-body h4 { color: #f4f4f5; }
+.dark .article-body h1 { border-bottom-color: #3f3f46; }
+.dark .article-body p code,
+.dark .article-body li code { background: #27272a; color: #f87171; }
+.dark .article-body a { color: #818cf8; }
+.dark .article-body blockquote { border-left-color: #4338ca; color: #a1a1aa; }

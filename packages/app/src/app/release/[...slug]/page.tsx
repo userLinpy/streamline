@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowLeft, ExternalLink, Tag } from 'lucide-react'
 import { marked } from 'marked'
+import { AISummary } from '@/components/AISummary'
 
 type GitHubReleaseDetail = {
   id: number
@@ -49,14 +50,13 @@ export default async function ReleasePage({
 
   if (!owner || !repo || !releaseId) {
     return (
-      <div className="min-h-screen bg-zinc-50 p-8">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-700 mb-8"
-        >
-          <ArrowLeft size={16} /> Retour
-        </Link>
-        <p className="text-zinc-500">Release introuvable.</p>
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-3">Release introuvable.</p>
+          <Link href="/" className="text-indigo-600 dark:text-indigo-400 text-sm hover:underline">
+            ← Retour au dashboard
+          </Link>
+        </div>
       </div>
     )
   }
@@ -66,14 +66,15 @@ export default async function ReleasePage({
 
   if (!release) {
     return (
-      <div className="min-h-screen bg-zinc-50 p-8">
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-700 mb-8"
-        >
-          <ArrowLeft size={16} /> Retour
-        </Link>
-        <p className="text-zinc-500">Release introuvable ou erreur GitHub API.</p>
+      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-3">
+            Release introuvable ou erreur GitHub API.
+          </p>
+          <Link href="/" className="text-indigo-600 dark:text-indigo-400 text-sm hover:underline">
+            ← Retour au dashboard
+          </Link>
+        </div>
       </div>
     )
   }
@@ -81,29 +82,36 @@ export default async function ReleasePage({
   const bodyHtml = release.body ? String(await marked(release.body)) : null
 
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <div className="max-w-3xl mx-auto p-6">
+    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-8">
+      {/* Header */}
+      <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400">
+          ⚡ Streamline
+        </span>
         <Link
           href="/"
-          className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-700 mb-8"
+          className="ml-auto flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 px-3 py-1.5 bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
         >
-          <ArrowLeft size={16} /> Retour au dashboard
+          <ArrowLeft size={12} />
+          Retour
         </Link>
+      </header>
 
-        <div className="bg-white rounded-xl border border-zinc-200 p-6">
+      <div className="max-w-3xl mx-auto p-4">
+        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4 mb-4">
             <div>
-              <p className="text-sm text-zinc-500 mb-1">{fullName}</p>
-              <h1 className="text-2xl font-bold text-zinc-900">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-1">{fullName}</p>
+              <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
                 {release.name ?? release.tag_name}
               </h1>
               <div className="flex items-center gap-2 mt-1">
-                <Tag size={12} className="text-zinc-400" />
-                <span className="text-sm text-green-700 font-mono">
+                <Tag size={12} className="text-zinc-400 dark:text-zinc-500" />
+                <span className="text-sm text-green-700 dark:text-green-400 font-mono">
                   {release.tag_name}
                 </span>
                 {release.prerelease && (
-                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full">
                     Pre-release
                   </span>
                 )}
@@ -119,7 +127,7 @@ export default async function ReleasePage({
             </a>
           </div>
 
-          <p className="text-xs text-zinc-400 mb-6">
+          <p className="text-xs text-zinc-400 dark:text-zinc-500 mb-6">
             Publié le{' '}
             {new Date(release.published_at).toLocaleDateString('fr-FR', {
               year: 'numeric',
@@ -129,13 +137,20 @@ export default async function ReleasePage({
             par {release.author?.login ?? 'GitHub'}
           </p>
 
+          <div className="mb-6">
+            <AISummary
+              title={release.name ?? release.tag_name}
+              text={(release.body ?? '').slice(0, 3000)}
+            />
+          </div>
+
           {bodyHtml ? (
             <div
-              className="text-sm text-zinc-700 leading-relaxed space-y-3 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-4 [&_h3]:text-sm [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_a]:text-indigo-600 [&_a]:underline [&_code]:bg-zinc-100 [&_code]:px-1 [&_code]:rounded"
+              className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed space-y-3 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-4 [&_h2]:text-zinc-900 dark:[&_h2]:text-zinc-100 [&_h3]:text-sm [&_h3]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mb-1 [&_a]:text-indigo-600 dark:[&_a]:text-indigo-400 [&_a]:underline [&_code]:bg-zinc-100 dark:[&_code]:bg-zinc-800 [&_code]:px-1 [&_code]:rounded [&_code]:text-zinc-800 dark:[&_code]:text-zinc-200"
               dangerouslySetInnerHTML={{ __html: bodyHtml }}
             />
           ) : (
-            <p className="text-zinc-400 italic text-sm">
+            <p className="text-zinc-400 dark:text-zinc-500 italic text-sm">
               Aucune description pour cette release.
             </p>
           )}
