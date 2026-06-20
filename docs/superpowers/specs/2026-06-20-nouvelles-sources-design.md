@@ -59,7 +59,10 @@ export type TechItem = {
 
 ### `lib/github-releases.ts`
 
-**API :** `GET https://api.github.com/repos/{owner}/{repo}/releases?per_page=5`
+**API (2 appels par repo en `Promise.all`) :**
+- `GET https://api.github.com/repos/{owner}/{repo}/releases?per_page=5` — releases
+- `GET https://api.github.com/repos/{owner}/{repo}` — métadonnées repo (`stargazers_count`, `language`)
+
 **Auth :** `GITHUB_TOKEN` (côté serveur, existant)
 **Cache :** `revalidate: 3600`
 
@@ -92,7 +95,8 @@ export const DEFAULT_WATCHED_REPOS = [
 | `published_at` | `publishedAt` |
 | `author.avatar_url` | `ownerAvatar` |
 | initiales du nom de repo | `coverInitials` |
-| `0` | `stars` (les releases n'ont pas de compteur distinct) |
+| `stargazers_count` (du repo, fetché séparément) | `stars` |
+| `language` (du repo, fetché séparément) | injecté dans `tags[0]` si non null |
 | `0` | `readTime` |
 
 **Exports :**
@@ -274,6 +278,95 @@ Le `[id]` pour chaque route est l'identifiant numérique **sans préfixe** (`gr-
 
 ---
 
+## Système de logos technologie dans `TechCard`
+
+### Principe
+
+Chaque carte affiche le logo de la technologie principale qu'elle représente, à la place des initiales (`coverInitials`). Si aucun logo n'est identifiable, les initiales restent le fallback.
+
+**Librairie :** `simple-icons` (npm) — 3 000+ SVG officiels de marques et technologies. Utilisée côté serveur uniquement (les SVG sont injectés en tant que chaîne HTML dans les props, pas de bundle client).
+
+### Fichier `lib/icons.ts`
+
+Exporte une fonction `getIconSlug(item: TechItem): string | null` qui retourne le slug `simple-icons` correspondant, ou `null` si non trouvé.
+
+**Logique de détection (par priorité) :**
+
+1. **Champ `language` GitHub** — pour `source: 'github'` et `source: 'github-release'`, le langage principal est explicite :
+   ```
+   'Python' → 'python'
+   'TypeScript' → 'typescript'
+   'JavaScript' → 'javascript'
+   'Rust' → 'rust'
+   'Go' → 'go'
+   'Kotlin' → 'kotlin'
+   'Java' → 'java'
+   'C++' → 'cplusplus'
+   ...
+   ```
+
+2. **Tags tech reconnus** — scan de `item.tags` pour les technologies connues (Python, React, Vue, Django, FastAPI, Node.js, Docker, Kubernetes, Terraform, etc.)
+
+3. **Détection IA par mots-clés** — scan du `title` (case-insensitive) pour identifier l'outil IA spécifique :
+   ```
+   'gemini' → 'googlegemini'
+   'claude' | 'anthropic' → 'anthropic'
+   'chatgpt' | 'openai' | 'gpt' → 'openai'
+   'copilot' → 'githubcopilot'
+   'llama' | 'meta ai' → 'meta'
+   'mistral' → 'mistral'
+   ```
+   puis si aucun outil spécifique trouvé, mais le titre contient 'llm' | 'ai model' | 'neural' → `'openai'` comme logo générique IA
+
+4. **Fallback** → `null` (TechCard affiche les `coverInitials`)
+
+**Map complète dans `lib/icons.ts` :**
+```typescript
+export const TECH_ICON_MAP: Record<string, string> = {
+  // Langages
+  python: 'python', javascript: 'javascript', typescript: 'typescript',
+  rust: 'rust', go: 'go', kotlin: 'kotlin', java: 'java',
+  'c++': 'cplusplus', 'c#': 'csharp', swift: 'swift', ruby: 'ruby',
+  php: 'php', scala: 'scala', dart: 'dart', elixir: 'elixir',
+  // Frameworks / runtimes
+  react: 'react', vue: 'vuedotjs', angular: 'angular',
+  'next.js': 'nextdotjs', svelte: 'svelte', astro: 'astro',
+  django: 'django', fastapi: 'fastapi', 'spring boot': 'spring',
+  laravel: 'laravel', rails: 'rubyonrails', express: 'express',
+  'node.js': 'nodedotjs', deno: 'deno', bun: 'bun',
+  // DevOps / infra
+  docker: 'docker', kubernetes: 'kubernetes', terraform: 'terraform',
+  ansible: 'ansible', 'github actions': 'githubactions',
+  linux: 'linux', ubuntu: 'ubuntu', aws: 'amazonaws',
+  // IA / ML
+  tensorflow: 'tensorflow', pytorch: 'pytorch',
+  'hugging face': 'huggingface',
+  // Outils
+  git: 'git', github: 'github', postgresql: 'postgresql',
+  mongodb: 'mongodb', redis: 'redis', graphql: 'graphql',
+}
+```
+
+### Intégration dans `TechCard`
+
+La zone logo/initiales (déjà existante dans TechCard) affiche :
+- **SVG `simple-icons`** si `getIconSlug` retourne un slug valide, coloré avec la couleur de marque (`si.color`)
+- **`coverInitials`** en texte sinon (comportement actuel inchangé)
+
+Les SVG `simple-icons` sont récupérés **à la construction du composant** (Server Component parent → props) ou via un import direct dans TechCard (côté client acceptable pour un SVG inline).
+
+### Remplacement par PNG custom
+
+Si un logo ne convient pas visuellement, l'utilisateur peut placer un fichier PNG dans `packages/app/public/logos/{slug}.png`. La fonction `getIconSlug` reste inchangée — seul TechCard vérifie en priorité l'existence d'un PNG local avant d'utiliser le SVG `simple-icons` :
+
+```
+1. /public/logos/{slug}.png existe → next/image avec ce PNG
+2. simple-icons slug trouvé → SVG inline
+3. Aucun → coverInitials
+```
+
+---
+
 ## Panneau filtres dans `DashboardClient`
 
 Bouton "⚙ Filtres" dans le header → panneau rétractable avec :
@@ -296,7 +389,8 @@ Bouton "⚙ Filtres" dans le header → panneau rétractable avec :
 | CRÉER | `packages/app/src/hooks/useWatchedRepos.ts` | Repos personnalisés (localStorage) |
 | CRÉER | `packages/app/src/components/FilterPanel.tsx` | UI filtres (toggles, chips, ajout custom) |
 | MODIFIER | `packages/app/src/components/DashboardClient.tsx` | Nouveaux onglets, intégration filtres |
-| MODIFIER | `packages/app/src/components/TechCard.tsx` | Nouveaux badges source, nouvelles routes détail |
+| MODIFIER | `packages/app/src/components/TechCard.tsx` | Nouveaux badges source, nouvelles routes détail, logos technologie |
+| CRÉER | `packages/app/src/lib/icons.ts` | Map techno → simple-icons slug + `getIconSlug()` |
 | MODIFIER | `packages/app/src/app/page.tsx` | `Promise.all` sur 4 sources |
 | CRÉER | `packages/app/src/app/release/[id]/page.tsx` | Détail release GitHub |
 | CRÉER | `packages/app/src/app/hn/[id]/page.tsx` | Détail story HN |
@@ -314,6 +408,16 @@ Même pattern TDD que le MVP :
 - `transformRelease` et `transformHit` sont des fonctions pures → tests unitaires complets
 - `useFilters` et `useWatchedRepos` → tests avec `renderHook` + `localStorage.clear()` en `beforeEach`
 - Pas de tests pour `FilterPanel` (composant UI)
+
+---
+
+## Remplacement de logos par PNG custom
+
+Si un logo `simple-icons` ne convient pas visuellement, placer un fichier PNG dans :
+```
+packages/app/public/logos/{slug}.png
+```
+TechCard vérifie en priorité l'existence d'un PNG local avant d'utiliser le SVG `simple-icons`. Pas de code à modifier — juste déposer le fichier PNG au bon nom.
 
 ---
 
