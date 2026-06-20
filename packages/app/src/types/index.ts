@@ -1,6 +1,6 @@
 export type TechItem = {
   id: string
-  source: 'github' | 'devto'
+  source: 'github' | 'devto' | 'github-release' | 'hackernews'
   title: string
   description: string
   url: string
