@@ -59,9 +59,11 @@ export default async function RepoPage({ params }: Params) {
 
   let readmeHtml = ''
   if (readmeRes.ok) {
-    const readmeData: { content: string } = await readmeRes.json()
-    const content = Buffer.from(readmeData.content, 'base64').toString('utf-8')
-    readmeHtml = String(await marked.parse(content))
+    const readmeData: { content?: string } = await readmeRes.json()
+    if (readmeData.content) {
+      const content = Buffer.from(readmeData.content, 'base64').toString('utf-8')
+      readmeHtml = String(await marked.parse(content))
+    }
   }
 
   return (

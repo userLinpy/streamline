@@ -13,7 +13,7 @@ type GitHubReleaseDetail = {
   author: {
     login: string
     avatar_url: string
-  }
+  } | null
 }
 
 async function fetchRelease(
@@ -126,7 +126,7 @@ export default async function ReleasePage({
               month: 'long',
               day: 'numeric',
             })}{' '}
-            par {release.author.login}
+            par {release.author?.login ?? 'GitHub'}
           </p>
 
           {bodyHtml ? (
