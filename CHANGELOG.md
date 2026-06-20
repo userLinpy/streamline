@@ -34,6 +34,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 
 ### Fixed
 
+- **Error boundary** : création de `app/error.tsx` — les erreurs Server Component non gérées affichent désormais un écran d'erreur au lieu de crasher le worker jest-worker Next.js
+- **Release page** : `release.author` peut être `null` (releases de bots) — accès protégé par `?.login ?? 'GitHub'`
+- **Repo page** : `readmeData.content` peut être absent — vérification avant `Buffer.from()`
+
 ### Removed
 
 ### BDD

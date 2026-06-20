@@ -6,13 +6,14 @@
 | **Statut** | Implémenté |
 | **Date** | 2026-06-20 |
 | **Auteur** | Lin |
-| **Version** | 0.3.0 |
+| **Version** | 0.3.1 |
 
 ---
 
 ## Architecture
 
 - `app/page.tsx` — Server Component, orchestre 4 appels API en parallèle via `Promise.all()`
+- `app/error.tsx` — Error Boundary global App Router (`'use client'`), intercepte les erreurs non gérées des Server Components enfants ; reçoit `error: Error & { digest?: string }` et `reset: () => void` ; affiche un écran d'erreur avec bouton Réessayer et bouton Retour, évitant le crash du worker jest-worker Next.js
 - `components/DashboardClient.tsx` — Client Component, gère les onglets, la barre de recherche, les filtres source/tag et les releases custom async
 - `components/FilterPanel.tsx` — Client Component, panneau de filtres (source toggles colorés, tag chips, formulaire repo/tag custom)
 - `components/TechCard.tsx` — Client Component, routing dynamique vers 4 types de pages détail, logo simple-icons avec fallback PNG → SVG → avatar → initiales
@@ -23,6 +24,7 @@
 | Fichier | Rôle |
 |---|---|
 | `packages/app/src/app/page.tsx` | Page principale — Server Component, 4 fetches parallèles |
+| `packages/app/src/app/error.tsx` | Error Boundary global — Client Component, gestion des erreurs Server Component non rattrapées |
 | `packages/app/src/components/DashboardClient.tsx` | Dashboard interactif — Client Component (5 onglets, recherche, filtres, releases custom) |
 | `packages/app/src/components/TechCard.tsx` | Carte individuelle — Client Component (4 sources, logos, routing dynamique) |
 | `packages/app/src/components/FilterPanel.tsx` | Panneau de filtres — source toggles, tag chips, ajout repo/tag custom |
@@ -157,6 +159,11 @@ type TechItem = {
   coverInitials: string  // obligatoire depuis v0.3.0 (plus optionnel)
 }
 ```
+
+## Null-safety (v0.3.1)
+
+- `release.author` peut être `null` sur les releases publiées par des bots GitHub — accès protégé par `release.author?.login ?? 'GitHub'` dans `app/release/[...slug]/page.tsx`
+- `readmeData.content` peut être absent (repo sans README ou réponse API incomplète) — vérification avant `Buffer.from()` dans `app/repo/[id]/page.tsx`
 
 ## Tests
 
