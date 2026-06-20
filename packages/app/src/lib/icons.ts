@@ -108,7 +108,7 @@ const AI_KEYWORD_MAP: Record<string, string> = {
   claude: 'anthropic',
   anthropic: 'anthropic',
   gemini: 'google',
-  copilot: 'github',
+  copilot: 'microsoft',
   llama: 'meta',
 }
 
