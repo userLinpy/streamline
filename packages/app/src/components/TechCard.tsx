@@ -8,6 +8,7 @@ import type { TechItem } from '@/types'
 import { formatRelativeDate, formatStars } from '@/lib/utils'
 import { getIconSlug, getIconData } from '@/lib/icons'
 import { trackVisit } from '@/lib/history'
+import { SourceIcon } from './SourceIcon'
 
 type Props = {
   item: TechItem
@@ -24,35 +25,35 @@ const SOURCE_BADGE: Record<
   { label: string; gradient: string; textColor: string; borderColor: string; accent: string }
 > = {
   github: {
-    label: '★ GitHub',
+    label: 'GitHub',
     gradient: 'from-green-50 to-emerald-50 dark:from-green-950/40 dark:to-emerald-950/40',
     textColor: 'text-green-700 dark:text-green-400',
     borderColor: 'border-green-200 dark:border-green-800',
     accent: 'bg-green-500',
   },
   devto: {
-    label: '✍ Dev.to',
+    label: 'Dev.to',
     gradient: 'from-indigo-50 to-violet-50 dark:from-indigo-950/40 dark:to-violet-950/40',
     textColor: 'text-indigo-700 dark:text-indigo-400',
     borderColor: 'border-indigo-200 dark:border-indigo-800',
     accent: 'bg-indigo-500',
   },
   'github-release': {
-    label: '📦 Release',
+    label: 'Release',
     gradient: 'from-purple-50 to-fuchsia-50 dark:from-purple-950/40 dark:to-fuchsia-950/40',
     textColor: 'text-purple-700 dark:text-purple-400',
     borderColor: 'border-purple-200 dark:border-purple-800',
     accent: 'bg-purple-500',
   },
   hackernews: {
-    label: '🔶 HN',
+    label: 'HN',
     gradient: 'from-orange-50 to-amber-50 dark:from-orange-950/40 dark:to-amber-950/40',
     textColor: 'text-orange-700 dark:text-orange-400',
     borderColor: 'border-orange-200 dark:border-orange-800',
     accent: 'bg-orange-500',
   },
   rss: {
-    label: '📡 RSS',
+    label: 'RSS',
     gradient: 'from-cyan-50 to-sky-50 dark:from-cyan-950/40 dark:to-sky-950/40',
     textColor: 'text-cyan-700 dark:text-cyan-400',
     borderColor: 'border-cyan-200 dark:border-cyan-800',
@@ -128,8 +129,9 @@ export const TechCard = memo(function TechCard({
 
         {/* Source badge */}
         <span
-          className={`absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white dark:bg-zinc-900 ${badge.textColor} ${badge.borderColor}`}
+          className={`absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white dark:bg-zinc-900 ${badge.textColor} ${badge.borderColor} flex items-center gap-1`}
         >
+          <SourceIcon source={item.source} size={10} />
           {badge.label}
         </span>
 
@@ -215,8 +217,9 @@ export const TechCard = memo(function TechCard({
           </span>
           <div className="flex items-center gap-2">
             {item.stars > 0 && (
-              <span className="text-[10px] text-amber-600 dark:text-amber-400">
-                ★ {formatStars(item.stars)}
+              <span className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-0.5">
+                <Star size={9} fill="currentColor" />
+                {formatStars(item.stars)}
               </span>
             )}
             {item.readTime > 0 && (

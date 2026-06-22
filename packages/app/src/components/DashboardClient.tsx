@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, Settings, X } from 'lucide-react'
+import { Search, Settings, X, Zap, Newspaper, Bookmark, Star } from 'lucide-react'
 import type { TechItem } from '@/types'
 import { TechCard } from './TechCard'
 import { FilterPanel } from './FilterPanel'
@@ -213,22 +213,25 @@ export function DashboardClient({ initialItems }: Props) {
     setSearchError(false)
   }
 
-  const tabs: { id: Tab; label: string; count: number; activeClass: string }[] = [
+  const tabs: { id: Tab; icon: React.ReactNode; label: string; count: number; activeClass: string }[] = [
     {
       id: 'news',
-      label: '✍ News',
+      icon: <Newspaper size={11} />,
+      label: 'News',
       count: allItems.length,
       activeClass: 'bg-indigo-600 text-white shadow-sm',
     },
     {
       id: 'readlater',
-      label: '🔖 À lire',
+      icon: <Bookmark size={11} />,
+      label: 'À lire',
       count: readLaterItems.length,
       activeClass: 'bg-amber-500 text-white shadow-sm',
     },
     {
       id: 'favorites',
-      label: '⭐ Favoris',
+      icon: <Star size={11} />,
+      label: 'Favoris',
       count: favorites.length,
       activeClass: 'bg-rose-500 text-white shadow-sm',
     },
@@ -238,8 +241,9 @@ export function DashboardClient({ initialItems }: Props) {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
       <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
-        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 shrink-0">
-          ⚡ Streamline
+        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 shrink-0 flex items-center gap-1">
+          <Zap size={14} />
+          Streamline
         </span>
         <div className="relative flex-1 min-w-0">
           <Search
@@ -331,6 +335,7 @@ export function DashboardClient({ initialItems }: Props) {
                 : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800'
             }`}
           >
+            {tab.icon}
             {tab.label}
             <span
               className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
@@ -381,13 +386,13 @@ export function DashboardClient({ initialItems }: Props) {
         {displayItems.length === 0 &&
         (activeTab === 'readlater' || activeTab === 'favorites') ? (
           <div className="text-center py-16 text-zinc-400 dark:text-zinc-500">
-            <p className="text-3xl mb-3">
-              {activeTab === 'readlater' ? '🔖' : '⭐'}
-            </p>
+            <div className="mb-3 opacity-30">
+              {activeTab === 'readlater' ? <Bookmark size={28} /> : <Star size={28} />}
+            </div>
             <p className="text-sm">
               {activeTab === 'readlater'
-                ? 'Aucun article à lire — clique sur 🔖 dans une carte pour sauvegarder'
-                : 'Aucun favori — clique sur ⭐ dans une carte pour ajouter aux favoris'}
+                ? 'Aucun article à lire — clique sur le signet dans une carte pour sauvegarder'
+                : 'Aucun favori — clique sur l\'étoile dans une carte pour ajouter aux favoris'}
             </p>
           </div>
         ) : (

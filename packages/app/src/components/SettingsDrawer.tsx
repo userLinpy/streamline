@@ -5,16 +5,10 @@ import { X, Clock, Trash2, History } from 'lucide-react'
 import Link from 'next/link'
 import { useHistory } from '@/hooks/useHistory'
 import { formatRelativeDate } from '@/lib/utils'
+import { SourceIcon } from './SourceIcon'
+import type { TechItem } from '@/types'
 
 type Period = 'today' | 'week' | 'month' | 'all'
-
-const SOURCE_EMOJI: Record<string, string> = {
-  github: '★',
-  devto: '✍',
-  'github-release': '📦',
-  hackernews: '🔶',
-  rss: '📡',
-}
 
 const PERIODS: { id: Period; label: string }[] = [
   { id: 'today', label: "Auj." },
@@ -104,8 +98,8 @@ export function SettingsDrawer({ onClose }: { onClose: () => void }) {
                       onClick={onClose}
                       className="flex items-start gap-2.5 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
                     >
-                      <span className="text-xs shrink-0 mt-0.5 w-4 text-center">
-                        {SOURCE_EMOJI[entry.source] ?? '•'}
+                      <span className="shrink-0 mt-0.5 w-4 flex items-center justify-center">
+                        <SourceIcon source={entry.source as TechItem['source']} size={12} />
                       </span>
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-zinc-800 dark:text-zinc-200 line-clamp-2 leading-snug">
@@ -122,8 +116,8 @@ export function SettingsDrawer({ onClose }: { onClose: () => void }) {
                       onClick={onClose}
                       className="flex items-start gap-2.5 px-4 py-3 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
                     >
-                      <span className="text-xs shrink-0 mt-0.5 w-4 text-center">
-                        {SOURCE_EMOJI[entry.source] ?? '•'}
+                      <span className="shrink-0 mt-0.5 w-4 flex items-center justify-center">
+                        <SourceIcon source={entry.source as TechItem['source']} size={12} />
                       </span>
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-zinc-800 dark:text-zinc-200 line-clamp-2 leading-snug">

@@ -1,8 +1,10 @@
+import { Zap } from 'lucide-react'
+
 export default function ReleaseLoading() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-8">
       <header className="bg-white/90 dark:bg-zinc-900/90 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
-        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400">⚡ Streamline</span>
+        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 flex items-center gap-1"><Zap size={14} /> Streamline</span>
         <div className="ml-auto h-7 w-20 bg-zinc-100 dark:bg-zinc-800 rounded-lg animate-pulse" />
       </header>
 

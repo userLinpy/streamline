@@ -1,3 +1,5 @@
+import { Zap } from 'lucide-react'
+
 function SkeletonCard() {
   return (
     <div className="bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm flex flex-col">
@@ -20,8 +22,9 @@ export default function DashboardLoading() {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
       <header className="bg-white/90 dark:bg-zinc-900/90 border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
-        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 shrink-0">
-          ⚡ Streamline
+        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 shrink-0 flex items-center gap-1">
+          <Zap size={14} />
+          Streamline
         </span>
         <div className="flex-1 h-9 bg-zinc-100 dark:bg-zinc-800 rounded-lg animate-pulse" />
         <div className="w-8 h-8 bg-zinc-100 dark:bg-zinc-800 rounded-lg animate-pulse shrink-0" />

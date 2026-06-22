@@ -6,7 +6,7 @@
 | **Statut** | Implémenté |
 | **Date** | 2026-06-20 |
 | **Auteur** | Lin |
-| **Version** | 0.5.0 |
+| **Version** | 0.6.0 |
 
 ---
 
@@ -19,7 +19,8 @@
 - `components/TechCard.tsx` — Client Component, routing dynamique vers 4 types de pages détail, logo simple-icons avec fallback PNG → SVG → avatar → initiales ; redesign v0.4.0 : `rounded-2xl`, cover gradient `bg-gradient-to-br`, bande accent en top, hover `-translate-y-0.5 shadow-lg`, classes `dark:` complètes ; badge 'rss' cyan + `trackVisit()` au clic + `<a target="_blank">` pour URLs externes ajoutés en v0.5.0
 - `components/AISummary.tsx` — Client Component (v0.5.0) : bouton "Résumer avec IA" (icône Sparkles), loading state, affichage 3 points clés en violet — appelle `POST /api/summarize` côté serveur
 - `components/SettingsDrawer.tsx` — Client Component (v0.5.0) : tiroir droit historique, filtres Auj/Semaine/Mois/Tout, boutons clearByPeriod et clearAll
-- `components/ThemeToggle.tsx` — Client Component (v0.4.0) : bouton Lune/Soleil qui toggle `.dark` sur `<html>` et persiste dans `localStorage('streamline-theme')`
+- `components/ThemeToggle.tsx` — Client Component (v0.4.0) : bouton Lune/Soleil qui toggle `.dark` sur `<html>` et persiste dans `localStorage('streamline-theme')` ; réécriture v0.6.0 avec framer-motion — composant interne `SolarSwitch` animé (SVG soleil/lune, `useMotionValue` + `useTransform`, `pathLength`, durée 0.7s)
+- `components/SourceIcon.tsx` — Client Component (v0.6.0) : icône vectorielle par source — simple-icons SVG inline pour github/devto/hackernews (via `getIconData`), lucide `Package` pour github-release, lucide `Rss` pour rss
 - Séparation nette Server / Client : le fetch initial est côté serveur, l'interactivité et les releases custom côté client
 
 ## Fichiers
@@ -31,7 +32,8 @@
 | `packages/app/src/components/DashboardClient.tsx` | Dashboard interactif — Client Component (5 onglets, recherche, filtres, releases custom, ThemeToggle, header glassmorphism) |
 | `packages/app/src/components/TechCard.tsx` | Carte individuelle — Client Component (4 sources, logos, routing dynamique, redesign rounded-2xl + dark mode) |
 | `packages/app/src/components/FilterPanel.tsx` | Panneau de filtres — source toggles, tag chips, ajout repo/tag custom (dark mode) |
-| `packages/app/src/components/ThemeToggle.tsx` | Bouton Lune/Soleil — toggle classe `.dark` sur `<html>`, persistance `localStorage('streamline-theme')` |
+| `packages/app/src/components/ThemeToggle.tsx` | Bouton Lune/Soleil — toggle classe `.dark` sur `<html>`, persistance `localStorage('streamline-theme')` ; animation framer-motion SolarSwitch (v0.6.0) |
+| `packages/app/src/components/SourceIcon.tsx` | Icône source vectorielle — simple-icons inline pour github/devto/hackernews, lucide Package/Rss sinon (v0.6.0) |
 | `packages/app/src/hooks/useReadLater.ts` | État "À lire" consommé par DashboardClient |
 | `packages/app/src/hooks/useFavorites.ts` | État "Favoris" consommé par DashboardClient |
 | `packages/app/src/hooks/useFilters.ts` | Filtres source+tag — toggle sources, tags prédéfinis et custom |
@@ -245,6 +247,12 @@ type TechItem = {
 | `streamline-history` | lib/history + useHistory | `TechItem[]` (purge auto 2 mois) |
 | `streamline-searches` | useRecentSearches | `string[]` max 10 entrées |
 
+## Icônes et animations (v0.6.0)
+
+- **Remplacement emojis** : tous les emojis de l'UI (★ ⚡ 📦 🔶 ✍ 📡 🔖 ⭐) remplacés par des icônes SVG vectorielles — lucide-react (`Zap`, `Star`, `Bookmark`, `Package`, `Rss`, `Newspaper`, `Brain`) et simple-icons via `SourceIcon`
+- **SourceIcon** : composant dédié au mapping source → icône — `getIconData` pour les sources avec simple-icons, fallback lucide pour `github-release` et `rss`
+- **ThemeToggle animation** : composant `SolarSwitch` interne (framer-motion `motion.path`, `useMotionValue`, `useTransform`, `pathLength`) — transition soleil↔lune en 0.7s avec morphing des rayons et de la lune
+
 ## Dark mode (v0.4.0)
 
 - Mécanisme : classe `.dark` sur `<html>` + `@custom-variant dark (&:is(.dark *))` dans `globals.css` (Tailwind v4 — pas de bibliothèque externe)
@@ -282,5 +290,6 @@ Toutes les pages détail (`repo/[id]`, `article/[id]`, `hn/[id]`, `release/[...s
 - [ ] Unitaire : filtrage local — "react" filtre sur titre, description et tags
 - [ ] Unitaire : changement d'onglet → réinitialise la recherche
 - [ ] Unitaire : `hooks/useFilters` — persistance localStorage (lecture au montage, écriture à chaque changement)
-- [ ] Composant : `ThemeToggle` — toggle `.dark` sur `<html>`, persistance `localStorage('streamline-theme')`
+- [ ] Composant : `ThemeToggle` — toggle `.dark` sur `<html>`, persistance `localStorage('streamline-theme')`, animation SolarSwitch framer-motion
+- [ ] Composant : `SourceIcon` — rendu simple-icons pour github/devto/hackernews, lucide Package/Rss pour les autres, null pour source inconnue
 - [ ] Composant : `AISummary` — loading state, affichage des 3 points, gestion erreur API

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, ExternalLink, Tag } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Tag, Zap } from 'lucide-react'
 import { marked } from 'marked'
 import { AISummary } from '@/components/AISummary'
 
@@ -85,8 +85,9 @@ export default async function ReleasePage({
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 pb-8">
       {/* Header */}
       <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
-        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400">
-          ⚡ Streamline
+        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+          <Zap size={14} />
+          Streamline
         </span>
         <Link
           href="/"

@@ -9,6 +9,17 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 
 ### Added
 
+- **SourceIcon** : nouveau composant `SourceIcon` — icône vectorielle par source (`simple-icons` inline pour github/devto/hackernews via `getIconData`, lucide `Package` pour github-release, lucide `Rss` pour rss)
+
+### Changed
+
+- **ThemeToggle** : réécriture avec framer-motion — composant interne `SolarSwitch` (SVG animé soleil/lune, `useMotionValue` + `useTransform` + `pathLength`, transition 0.7s) ; dépendance `framer-motion ^12.40.0` ajoutée
+- **Suppression emojis** : tous les emojis de l'UI (★ ⚡ 📦 🔶 ✍ 📡 🔖 ⭐) remplacés par des icônes SVG vectorielles — lucide-react (`Zap`, `Star`, `Bookmark`, `Package`, `Rss`, `Newspaper`, `Brain`) via `SourceIcon` dans `TechCard`, `FilterPanel`, `DashboardClient`, `SettingsDrawer` et toutes les pages détail
+
+---
+
+### Added
+
 - **Sources RSS** : `useWatchedFeeds` (localStorage `streamline-feeds`) + Route Handler `GET /api/rss?url=...` (parse RSS 2.0 + Atom via fast-xml-parser côté serveur) + intégration dans `DashboardClient` (`allItems` inclut `rssFeedItems`) + badge 📡 cyan dans `TechCard` + section "URL flux RSS" dans `FilterPanel`
 - **Résumé IA** : composant `AISummary` (bouton Sparkles, loading state, 3 points violet) + Route Handler `POST /api/summarize` (GitHub Models `gpt-4o-mini`, endpoint `https://models.inference.ai.azure.com`, `GITHUB_TOKEN` serveur uniquement, gratuit 150 req/jour) — intégré dans `repo/[id]`, `article/[id]`, `hn/[id]`, `release/[...slug]`
 - **Historique consultations** : `lib/history.ts` (`trackVisit()` pure fonction localStorage `streamline-history`, auto-purge 2 mois) + `useHistory` hook lecture + `SettingsDrawer` (tiroir droit, filtres Auj/Semaine/Mois/Tout, clearByPeriod, clearAll) + bouton ⚙️ dans header `DashboardClient` + `trackVisit()` appelé au clic de chaque `TechCard`

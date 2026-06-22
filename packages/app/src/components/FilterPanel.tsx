@@ -1,9 +1,10 @@
 'use client'
 
-import { X, Plus } from 'lucide-react'
+import { X, Plus, Rss } from 'lucide-react'
 import { useState } from 'react'
 import type { Filters, SourceFilters } from '@/hooks/useFilters'
 import { PREDEFINED_TAGS } from '@/hooks/useFilters'
+import { SourceIcon } from './SourceIcon'
 
 type Props = {
   filters: Filters
@@ -20,11 +21,11 @@ type Props = {
 }
 
 const SOURCE_LABELS: Record<keyof SourceFilters, string> = {
-  github: '★ GitHub',
-  devto: '✍ Dev.to',
-  'github-release': '📦 Releases',
-  hackernews: '🔶 Hacker News',
-  rss: '📡 RSS',
+  github: 'GitHub',
+  devto: 'Dev.to',
+  'github-release': 'Releases',
+  hackernews: 'Hacker News',
+  rss: 'RSS',
 }
 
 const SOURCE_ACTIVE_CLASS: Record<keyof SourceFilters, string> = {
@@ -64,12 +65,13 @@ export function FilterPanel({
           <button
             key={source}
             onClick={() => onToggleSource(source)}
-            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+            className={`text-xs px-2.5 py-1 rounded-full border transition-colors flex items-center gap-1 ${
               filters.sources[source]
                 ? SOURCE_ACTIVE_CLASS[source]
                 : 'bg-white dark:bg-zinc-800 text-zinc-400 dark:text-zinc-500 border-zinc-200 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-500'
             }`}
           >
+            <SourceIcon source={source} size={11} />
             {SOURCE_LABELS[source]}
           </button>
         ))}
@@ -208,7 +210,8 @@ export function FilterPanel({
               className="flex items-center gap-1 text-xs bg-cyan-50 dark:bg-cyan-950/30 text-cyan-700 dark:text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-200 dark:border-cyan-800"
               title={url}
             >
-              📡 {label}
+              <Rss size={10} className="shrink-0" />
+              {label}
               <button
                 onClick={() => onRemoveFeed(url)}
                 className="text-cyan-400 dark:text-cyan-500 hover:text-rose-500 ml-0.5"
