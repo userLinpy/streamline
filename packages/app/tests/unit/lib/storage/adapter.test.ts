@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { StorageAdapter } from '../adapter'
+import type { StorageAdapter } from '@/lib/storage/adapter'
 import type { SourceFilters } from '@/hooks/useFilters'
 
 describe('StorageAdapter', () => {

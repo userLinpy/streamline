@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { localStorageAdapter } from '../local'
+import { localStorageAdapter } from '@/lib/storage/local'
 import type { TechItem } from '@/types'
 
 const mockItem: TechItem = {
