@@ -5,13 +5,19 @@ import { Bookmark, Star, Clock, Brain } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { TechItem } from '@/types'
-import { useReadLater } from '@/hooks/useReadLater'
-import { useFavorites } from '@/hooks/useFavorites'
 import { formatRelativeDate, formatStars } from '@/lib/utils'
 import { getIconSlug, getIconData } from '@/lib/icons'
 import { trackVisit } from '@/lib/history'
 
-type Props = { item: TechItem }
+type Props = {
+  item: TechItem
+  inReadLater: boolean
+  inFavorites: boolean
+  onAddToReadLater: (item: TechItem) => void
+  onRemoveFromReadLater: (id: string) => void
+  onAddFavorite: (item: TechItem) => void
+  onRemoveFavorite: (id: string) => void
+}
 
 const SOURCE_BADGE: Record<
   TechItem['source'],
@@ -71,12 +77,15 @@ function getDetailPath(item: TechItem): string {
   return `/hn/${item.id.replace(/^hn-/, '')}`
 }
 
-export const TechCard = memo(function TechCard({ item }: Props) {
-  const { isInReadLater, addToReadLater, removeFromReadLater } = useReadLater()
-  const { isFavorite, addFavorite, removeFavorite } = useFavorites()
-
-  const inReadLater = isInReadLater(item.id)
-  const inFavorites = isFavorite(item.id)
+export const TechCard = memo(function TechCard({
+  item,
+  inReadLater,
+  inFavorites,
+  onAddToReadLater,
+  onRemoveFromReadLater,
+  onAddFavorite,
+  onRemoveFavorite,
+}: Props) {
   const detailPath = getDetailPath(item)
   const badge = SOURCE_BADGE[item.source]
   const iconSlug = getIconSlug(item)
@@ -135,7 +144,7 @@ export const TechCard = memo(function TechCard({ item }: Props) {
         <div className="absolute top-3 right-3 flex gap-1">
           <button
             onClick={() =>
-              inReadLater ? removeFromReadLater(item.id) : addToReadLater(item)
+              inReadLater ? onRemoveFromReadLater(item.id) : onAddToReadLater(item)
             }
             className={`w-7 h-7 rounded-lg flex items-center justify-center border shadow-sm transition-colors ${
               inReadLater
@@ -148,7 +157,7 @@ export const TechCard = memo(function TechCard({ item }: Props) {
           </button>
           <button
             onClick={() =>
-              inFavorites ? removeFavorite(item.id) : addFavorite(item)
+              inFavorites ? onRemoveFavorite(item.id) : onAddFavorite(item)
             }
             className={`w-7 h-7 rounded-lg flex items-center justify-center border shadow-sm transition-colors ${
               inFavorites

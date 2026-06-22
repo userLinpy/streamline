@@ -31,8 +31,8 @@ export function DashboardClient({ items }: Props) {
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const autocompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { readLaterItems } = useReadLater()
-  const { favorites } = useFavorites()
+  const { readLaterItems, addToReadLater, removeFromReadLater, isInReadLater } = useReadLater()
+  const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites()
   const { filters, toggleSource, toggleTag, addCustomTag, removeCustomTag } = useFilters()
   const { customRepos, addRepo, removeRepo } = useWatchedRepos()
   const { feeds, addFeed, removeFeed } = useWatchedFeeds()
@@ -373,7 +373,16 @@ export function DashboardClient({ items }: Props) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {displayItems.map(item => (
-              <TechCard key={item.id} item={item} />
+              <TechCard
+                key={item.id}
+                item={item}
+                inReadLater={isInReadLater(item.id)}
+                inFavorites={isFavorite(item.id)}
+                onAddToReadLater={addToReadLater}
+                onRemoveFromReadLater={removeFromReadLater}
+                onAddFavorite={addFavorite}
+                onRemoveFavorite={removeFavorite}
+              />
             ))}
           </div>
         )}
