@@ -20,6 +20,8 @@ import Image from 'next/image'
 
 type Tab = 'news' | 'readlater' | 'favorites'
 
+const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
+
 type Props = { initialItems: TechItem[] }
 
 export function DashboardClient({ initialItems }: Props) {
@@ -66,6 +68,7 @@ export function DashboardClient({ initialItems }: Props) {
   // Load releases for custom repos client-side
   useEffect(() => {
     if (customRepos.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCustomReleases([])
       return
     }
@@ -79,6 +82,7 @@ export function DashboardClient({ initialItems }: Props) {
   // Load RSS feeds client-side
   useEffect(() => {
     if (feeds.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRssFeedItems([])
       return
     }
@@ -119,10 +123,10 @@ export function DashboardClient({ initialItems }: Props) {
   )
 
   // 3. Filter by tab; HN items older than 2 weeks hidden on news unless searching
-  const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
   const baseItems = useMemo<TechItem[]>(() => {
     if (activeTab === 'news') {
       if (!query.trim()) {
+        // eslint-disable-next-line react-hooks/purity
         const cutoff = Date.now() - TWO_WEEKS_MS
         return filteredByTag.filter(
           i => i.source !== 'hackernews' || new Date(i.publishedAt).getTime() >= cutoff

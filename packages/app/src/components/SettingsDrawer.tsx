@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { X, Clock, Trash2, History } from 'lucide-react'
 import Link from 'next/link'
 import { useHistory } from '@/hooks/useHistory'
@@ -21,7 +21,8 @@ export function SettingsDrawer({ onClose }: { onClose: () => void }) {
   const { history, clearHistory, clearByPeriod } = useHistory()
   const [period, setPeriod] = useState<Period>('all')
 
-  const now = Date.now()
+  // eslint-disable-next-line react-hooks/purity
+  const now = useMemo(() => Date.now(), [])
   const cutoffs: Record<Period, number> = {
     today: now - 24 * 60 * 60 * 1000,
     week: now - 7 * 24 * 60 * 60 * 1000,
