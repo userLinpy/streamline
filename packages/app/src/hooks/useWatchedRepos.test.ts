@@ -1,5 +1,12 @@
+import { vi } from 'vitest'
+import { localStorageAdapter } from '@/lib/storage/local'
+
+vi.mock('./useStorageAdapter', () => ({
+  useStorageAdapter: () => localStorageAdapter,
+}))
+
 import { describe, it, expect, beforeEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, waitFor } from '@testing-library/react'
 import { useWatchedRepos } from './useWatchedRepos'
 
 beforeEach(() => {
@@ -26,12 +33,12 @@ describe('useWatchedRepos', () => {
     expect(result.current.isValidRepo('/noslug')).toBe(false)
   })
 
-  it('should add a valid repo and return true', () => {
+  it('should add a valid repo and return true', async () => {
     const { result } = renderHook(() => useWatchedRepos())
     let returnValue = false
-    act(() => { returnValue = result.current.addRepo('facebook/react') })
+    await act(async () => { returnValue = result.current.addRepo('facebook/react') })
     expect(returnValue).toBe(true)
-    expect(result.current.customRepos).toContain('facebook/react')
+    await waitFor(() => expect(result.current.customRepos).toContain('facebook/react'))
   })
 
   it('should reject invalid repo and return false', () => {
@@ -42,11 +49,13 @@ describe('useWatchedRepos', () => {
     expect(result.current.customRepos).toEqual([])
   })
 
-  it('should ignore duplicate repos', () => {
+  it('should ignore duplicate repos', async () => {
     const { result } = renderHook(() => useWatchedRepos())
-    act(() => { result.current.addRepo('facebook/react') })
-    act(() => { result.current.addRepo('facebook/react') })
-    expect(result.current.customRepos.filter(r => r === 'facebook/react').length).toBe(1)
+    await act(async () => { result.current.addRepo('facebook/react') })
+    await act(async () => { result.current.addRepo('facebook/react') })
+    await waitFor(() =>
+      expect(result.current.customRepos.filter(r => r === 'facebook/react').length).toBe(1)
+    )
   })
 
   it('should remove a repo', () => {

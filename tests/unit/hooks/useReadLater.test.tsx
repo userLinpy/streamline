@@ -1,7 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
+import { localStorageAdapter } from '@/lib/storage/local'
 import { useReadLater } from '@/hooks/useReadLater'
 import type { TechItem } from '@/types'
+
+vi.mock('@/hooks/useStorageAdapter', () => ({ useStorageAdapter: () => localStorageAdapter }))
 
 const mockItem: TechItem = {
   id: 'dt-1',
@@ -24,15 +27,15 @@ describe('useReadLater', () => {
     expect(result.current.readLaterItems).toEqual([])
   })
 
-  it('should add an item', () => {
+  it('should add an item', async () => {
     const { result } = renderHook(() => useReadLater())
-    act(() => result.current.addToReadLater(mockItem))
+    await act(async () => { result.current.addToReadLater(mockItem) })
     expect(result.current.readLaterItems).toHaveLength(1)
   })
 
-  it('should detect item in list after adding', () => {
+  it('should detect item in list after adding', async () => {
     const { result } = renderHook(() => useReadLater())
-    act(() => result.current.addToReadLater(mockItem))
+    await act(async () => { result.current.addToReadLater(mockItem) })
     expect(result.current.isInReadLater('dt-1')).toBe(true)
   })
 
@@ -41,17 +44,17 @@ describe('useReadLater', () => {
     expect(result.current.isInReadLater('dt-999')).toBe(false)
   })
 
-  it('should not duplicate items', () => {
+  it('should not duplicate items', async () => {
     const { result } = renderHook(() => useReadLater())
-    act(() => result.current.addToReadLater(mockItem))
-    act(() => result.current.addToReadLater(mockItem))
+    await act(async () => { result.current.addToReadLater(mockItem) })
+    await act(async () => { result.current.addToReadLater(mockItem) })
     expect(result.current.readLaterItems).toHaveLength(1)
   })
 
-  it('should remove an item', () => {
+  it('should remove an item', async () => {
     const { result } = renderHook(() => useReadLater())
-    act(() => result.current.addToReadLater(mockItem))
-    act(() => result.current.removeFromReadLater('dt-1'))
+    await act(async () => { result.current.addToReadLater(mockItem) })
+    await act(async () => { result.current.removeFromReadLater('dt-1') })
     expect(result.current.readLaterItems).toHaveLength(0)
     expect(result.current.isInReadLater('dt-1')).toBe(false)
   })

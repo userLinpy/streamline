@@ -14,12 +14,19 @@ import { useWatchedRepos } from '@/hooks/useWatchedRepos'
 import { useWatchedFeeds } from '@/hooks/useWatchedFeeds'
 import { useRecentSearches } from '@/hooks/useRecentSearches'
 import { PREDEFINED_TAGS } from '@/hooks/useFilters'
+import { useSession, signOut } from 'next-auth/react'
+import Link from 'next/link'
+import Image from 'next/image'
 
 type Tab = 'news' | 'readlater' | 'favorites'
+
+const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
 
 type Props = { initialItems: TechItem[] }
 
 export function DashboardClient({ initialItems }: Props) {
+  const { data: session } = useSession()
+
   const [activeTab, setActiveTab] = useState<Tab>('news')
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<TechItem[] | null>(null)
@@ -61,6 +68,7 @@ export function DashboardClient({ initialItems }: Props) {
   // Load releases for custom repos client-side
   useEffect(() => {
     if (customRepos.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCustomReleases([])
       return
     }
@@ -74,6 +82,7 @@ export function DashboardClient({ initialItems }: Props) {
   // Load RSS feeds client-side
   useEffect(() => {
     if (feeds.length === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRssFeedItems([])
       return
     }
@@ -114,10 +123,10 @@ export function DashboardClient({ initialItems }: Props) {
   )
 
   // 3. Filter by tab; HN items older than 2 weeks hidden on news unless searching
-  const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
   const baseItems = useMemo<TechItem[]>(() => {
     if (activeTab === 'news') {
       if (!query.trim()) {
+        // eslint-disable-next-line react-hooks/purity
         const cutoff = Date.now() - TWO_WEEKS_MS
         return filteredByTag.filter(
           i => i.source !== 'hackernews' || new Date(i.publishedAt).getTime() >= cutoff
@@ -315,6 +324,36 @@ export function DashboardClient({ initialItems }: Props) {
           <Settings size={14} />
         </button>
         <ThemeToggle />
+        {session?.user ? (
+          <div className="flex items-center gap-2">
+            {session.user.image ? (
+              <Image
+                src={session.user.image}
+                alt={session.user.name ?? 'Avatar'}
+                width={28}
+                height={28}
+                className="rounded-full"
+              />
+            ) : (
+              <div className="w-7 h-7 rounded-full bg-zinc-300 dark:bg-zinc-600 flex items-center justify-center text-xs font-medium">
+                {(session.user.name ?? session.user.email ?? '?')[0].toUpperCase()}
+              </div>
+            )}
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
+            >
+              Déconnexion
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+          >
+            Se connecter
+          </Link>
+        )}
       </header>
 
       {/* Settings drawer */}

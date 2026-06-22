@@ -3,13 +3,14 @@
 | Champ      | Valeur                         |
 |------------|--------------------------------|
 | Numéro     | ADR-003                        |
-| Statut     | Accepté                        |
+| Statut     | Superseded (2026-06-22)        |
 | Date       | 2026-06-17                     |
 | Auteur(s)  | Lin                            |
 | Owner      | Lin                            |
 | Décideurs  | Lin                            |
 | Contexte   | Phase 1 — Init projet          |
 | Remplace   | —                              |
+| Remplacé par | feat/auth-sync-cloud — Prisma 6 + Neon PostgreSQL ajoutés en v0.2.0 |
 
 ## Contexte
 

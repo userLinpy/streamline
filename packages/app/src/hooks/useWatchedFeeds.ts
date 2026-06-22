@@ -1,38 +1,30 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-
-const STORAGE_KEY = 'streamline-feeds'
+import { useStorageAdapter } from './useStorageAdapter'
 
 export function useWatchedFeeds() {
+  const adapter = useStorageAdapter()
   const [feeds, setFeeds] = useState<string[]>([])
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) setFeeds(JSON.parse(stored) as string[])
-    } catch {}
-  }, [])
+    void adapter.getWatchedFeeds().then(setFeeds)
+  }, [adapter])
 
   function addFeed(url: string): boolean {
     const trimmed = url.trim()
     if (!trimmed) return false
-    try {
-      new URL(trimmed)
-    } catch {
-      return false
-    }
-    if (feeds.includes(trimmed)) return false
-    const next = [...feeds, trimmed]
-    setFeeds(next)
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
+    try { new URL(trimmed) } catch { return false }
+    void adapter.addWatchedFeed(trimmed).then(() =>
+      adapter.getWatchedFeeds().then(setFeeds)
+    )
     return true
   }
 
   function removeFeed(url: string) {
-    const next = feeds.filter(f => f !== url)
-    setFeeds(next)
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
+    void adapter.removeWatchedFeed(url).then(() =>
+      adapter.getWatchedFeeds().then(setFeeds)
+    )
   }
 
   return { feeds, addFeed, removeFeed }

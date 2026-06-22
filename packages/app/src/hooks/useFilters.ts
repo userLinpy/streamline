@@ -1,20 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useStorageAdapter } from './useStorageAdapter'
 
 export const PREDEFINED_TAGS = [
-  'Python',
-  'JavaScript',
-  'TypeScript',
-  'React',
-  'Node.js',
-  'Go',
-  'Rust',
-  'DevOps',
-  'IA/ML',
-  'Agile',
-  'Security',
-  'Open Source',
+  'Python', 'JavaScript', 'TypeScript', 'React', 'Node.js',
+  'Go', 'Rust', 'DevOps', 'IA/ML', 'Agile', 'Security', 'Open Source',
 ]
 
 export type SourceFilters = {
@@ -32,78 +23,47 @@ export type Filters = {
 }
 
 const DEFAULT_FILTERS: Filters = {
-  sources: {
-    github: true,
-    devto: true,
-    'github-release': true,
-    hackernews: true,
-    rss: true,
-  },
+  sources: { github: true, devto: true, 'github-release': true, hackernews: true, rss: true },
   activeTags: [],
   customTags: [],
 }
 
-const STORAGE_KEY = 'streamline-filters'
-
 export function useFilters() {
+  const adapter = useStorageAdapter()
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        const parsed = JSON.parse(stored) as Partial<Filters>
-        setFilters({
-          sources: { ...DEFAULT_FILTERS.sources, ...(parsed.sources ?? {}) },
-          activeTags: parsed.activeTags ?? [],
-          customTags: parsed.customTags ?? [],
-        })
-      }
-    } catch {}
-  }, [])
+    void adapter.getPreferences().then(setFilters)
+  }, [adapter])
+
+  function persist(next: Filters) {
+    setFilters(next)
+    void adapter.savePreferences(next)
+  }
 
   function toggleSource(source: keyof SourceFilters) {
-    setFilters(prev => {
-      const next = { ...prev, sources: { ...prev.sources, [source]: !prev.sources[source] } }
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
-      return next
-    })
+    persist({ ...filters, sources: { ...filters.sources, [source]: !filters.sources[source] } })
   }
 
   function toggleTag(tag: string) {
-    setFilters(prev => {
-      const exists = prev.activeTags.includes(tag)
-      const next = {
-        ...prev,
-        activeTags: exists
-          ? prev.activeTags.filter(t => t !== tag)
-          : [...prev.activeTags, tag],
-      }
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
-      return next
+    const exists = filters.activeTags.includes(tag)
+    persist({
+      ...filters,
+      activeTags: exists ? filters.activeTags.filter(t => t !== tag) : [...filters.activeTags, tag],
     })
   }
 
   function addCustomTag(tag: string) {
     const trimmed = tag.trim()
-    if (!trimmed) return
-    setFilters(prev => {
-      if (prev.customTags.includes(trimmed)) return prev
-      const next = { ...prev, customTags: [...prev.customTags, trimmed] }
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
-      return next
-    })
+    if (!trimmed || filters.customTags.includes(trimmed)) return
+    persist({ ...filters, customTags: [...filters.customTags, trimmed] })
   }
 
   function removeCustomTag(tag: string) {
-    setFilters(prev => {
-      const next = {
-        ...prev,
-        customTags: prev.customTags.filter(t => t !== tag),
-        activeTags: prev.activeTags.filter(t => t !== tag),
-      }
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)) } catch {}
-      return next
+    persist({
+      ...filters,
+      customTags: filters.customTags.filter(t => t !== tag),
+      activeTags: filters.activeTags.filter(t => t !== tag),
     })
   }
 

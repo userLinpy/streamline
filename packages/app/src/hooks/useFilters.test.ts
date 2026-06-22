@@ -1,3 +1,10 @@
+import { vi } from 'vitest'
+import { localStorageAdapter } from '@/lib/storage/local'
+
+vi.mock('./useStorageAdapter', () => ({
+  useStorageAdapter: () => localStorageAdapter,
+}))
+
 import { describe, it, expect } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useFilters } from './useFilters'
