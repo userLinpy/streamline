@@ -14,7 +14,6 @@ export default async function SettingsPage() {
 
   return (
     <SettingsClient
-      userId={session.user.id}
       name={session.user.name ?? null}
       email={session.user.email ?? null}
       image={session.user.image ?? null}

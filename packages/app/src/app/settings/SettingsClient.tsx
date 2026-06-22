@@ -45,7 +45,6 @@ const TABS: { id: Tab; Icon: (props: { size?: number; className?: string }) => R
 ]
 
 interface Props {
-  userId: string
   name: string | null
   email: string | null
   image: string | null
@@ -132,17 +131,19 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
     })
   }
 
-  async function handleExport() {
-    const data = await exportData()
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: 'application/json',
+  function handleExport() {
+    startTransition(async () => {
+      const data = await exportData()
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: 'application/json',
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `streamline-data-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
     })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `streamline-data-${new Date().toISOString().split('T')[0]}.json`
-    a.click()
-    URL.revokeObjectURL(url)
   }
 
   function handleDelete() {
@@ -440,10 +441,11 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
             </p>
             <button
               onClick={handleExport}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              disabled={isPending}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
             >
               <Download size={14} />
-              Exporter mes données (JSON)
+              {isPending ? 'Export en cours…' : 'Exporter mes données (JSON)'}
             </button>
           </div>
         )}
