@@ -9,6 +9,8 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 
 ### Added
 
+- **Auth + Sync Cloud** : authentification GitHub OAuth + email/password (NextAuth v5), synchronisation cloud des données utilisateur (Prisma 6 → Neon PostgreSQL). Pattern Adapter : `LocalStorageAdapter` (anonyme) et `CloudAdapter` (connecté). Migration automatique localStorage → cloud à l'inscription. Pages `/login` et `/register`. Bouton login/logout dans le header.
+
 - **SourceIcon** : nouveau composant `SourceIcon` — icône vectorielle par source (`simple-icons` inline pour github/devto/hackernews via `getIconData`, lucide `Package` pour github-release, lucide `Rss` pour rss)
 
 ### Changed
