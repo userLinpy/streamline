@@ -36,7 +36,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: '/login' },
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.id = user.id
+      if (user) {
+        // Connexion initiale : stocker l'id et le tokenVersion courant
+        token.id = user.id
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { tokenVersion: true },
+        })
+        token.tokenVersion = dbUser?.tokenVersion ?? 0
+        return token
+      }
+      // Appels suivants : vérifier que le tokenVersion n'a pas été incrémenté
+      if (token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { tokenVersion: true },
+        })
+        if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) return null
+      }
       return token
     },
     async session({ session, token }) {
