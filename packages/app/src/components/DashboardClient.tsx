@@ -17,14 +17,15 @@ import { PREDEFINED_TAGS } from '@/hooks/useFilters'
 
 type Tab = 'news' | 'readlater' | 'favorites'
 
-type Props = { items: TechItem[] }
+type Props = { initialItems: TechItem[] }
 
-export function DashboardClient({ items }: Props) {
+export function DashboardClient({ initialItems }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>('news')
   const [query, setQuery] = useState('')
   const [searchResults, setSearchResults] = useState<TechItem[] | null>(null)
   const [searching, setSearching] = useState(false)
   const [searchError, setSearchError] = useState(false)
+  const [asyncItems, setAsyncItems] = useState<TechItem[]>([])
   const [customReleases, setCustomReleases] = useState<TechItem[]>([])
   const [rssFeedItems, setRssFeedItems] = useState<TechItem[]>([])
   const [showSettings, setShowSettings] = useState(false)
@@ -37,6 +38,25 @@ export function DashboardClient({ items }: Props) {
   const { customRepos, addRepo, removeRepo } = useWatchedRepos()
   const { feeds, addFeed, removeFeed } = useWatchedFeeds()
   const { searches, addSearch, removeSearch } = useRecentSearches()
+
+  // Progressive load: Dev.to, HN, and default releases arrive in parallel after GitHub
+  useEffect(() => {
+    const sources = ['/api/devto', '/api/hackernews', '/api/releases-default']
+    sources.forEach(url => {
+      fetch(url)
+        .then(r => r.json() as Promise<TechItem[]>)
+        .then(data => {
+          if (Array.isArray(data)) {
+            setAsyncItems(prev => {
+              const existingIds = new Set(prev.map(i => i.id))
+              const fresh = data.filter(i => !existingIds.has(i.id))
+              return fresh.length > 0 ? [...prev, ...fresh] : prev
+            })
+          }
+        })
+        .catch(() => {})
+    })
+  }, [])
 
   // Load releases for custom repos client-side
   useEffect(() => {
@@ -71,8 +91,8 @@ export function DashboardClient({ items }: Props) {
   }, [feeds])
 
   const allItems = useMemo(
-    () => [...items, ...customReleases, ...rssFeedItems],
-    [items, customReleases, rssFeedItems]
+    () => [...initialItems, ...asyncItems, ...customReleases, ...rssFeedItems],
+    [initialItems, asyncItems, customReleases, rssFeedItems]
   )
 
   // 1. Filter by source
