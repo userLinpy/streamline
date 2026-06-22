@@ -40,6 +40,8 @@ export async function changePassword(data: {
   const valid = await bcrypt.compare(data.current, user.password)
   if (!valid) return { error: 'Mot de passe actuel incorrect' }
 
+  if (data.next.length < 8) return { error: 'Mot de passe trop court (min 8 caractères)' }
+
   const hash = await bcrypt.hash(data.next, 10)
   await prisma.user.update({ where: { id: userId }, data: { password: hash } })
   return {}

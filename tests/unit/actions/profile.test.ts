@@ -111,6 +111,13 @@ describe('changePassword', () => {
     expect(mockUserUpdate).not.toHaveBeenCalled()
   })
 
+  it('should return error when new password is too short', async () => {
+    mockBcryptCompare.mockResolvedValue(true)
+    const result = await changePassword({ current: 'correctpass', next: 'short' })
+    expect(result).toEqual({ error: 'Mot de passe trop court (min 8 caractères)' })
+    expect(mockUserUpdate).not.toHaveBeenCalled()
+  })
+
   it('should update password when current password is correct', async () => {
     mockBcryptCompare.mockResolvedValue(true)
     mockBcryptHash.mockResolvedValue('hashed_new_password')
