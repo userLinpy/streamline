@@ -72,3 +72,5 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 ### Removed
 
 ### BDD
+
+- **Auth + Sync Cloud** : schéma Prisma 6 ajouté — 11 modèles (User, Account, Session, VerificationToken, Favorite, ReadLater, HistoryEntry, WatchedRepo, WatchedFeed, UserPreferences, RecentSearch) sur Neon PostgreSQL. Remplace l'absence de BDD du MVP (ADR-003 superseded).
