@@ -2,44 +2,29 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import type { TechItem } from '@/types'
-
-const STORAGE_KEY = 'streamline_read_later'
-
-function readStorage(): TechItem[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? (JSON.parse(raw) as TechItem[]) : []
-  } catch {
-    return []
-  }
-}
-
-function writeStorage(items: TechItem[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch {}
-}
+import { useStorageAdapter } from './useStorageAdapter'
 
 export function useReadLater() {
+  const adapter = useStorageAdapter()
   const [readLaterItems, setReadLaterItems] = useState<TechItem[]>([])
 
   useEffect(() => {
-    setReadLaterItems(readStorage())
-  }, [])
+    void adapter.getReadLater().then(setReadLaterItems)
+  }, [adapter])
 
-  const addToReadLater = useCallback((item: TechItem) => {
-    const current = readStorage()
-    if (current.some(i => i.id === item.id)) return
-    const next = [...current, item]
-    writeStorage(next)
-    setReadLaterItems(next)
-  }, [])
+  const addToReadLater = useCallback(
+    (item: TechItem) => {
+      void adapter.addReadLater(item).then(() => adapter.getReadLater().then(setReadLaterItems))
+    },
+    [adapter]
+  )
 
-  const removeFromReadLater = useCallback((id: string) => {
-    const next = readStorage().filter(i => i.id !== id)
-    writeStorage(next)
-    setReadLaterItems(next)
-  }, [])
+  const removeFromReadLater = useCallback(
+    (id: string) => {
+      void adapter.removeReadLater(id).then(() => adapter.getReadLater().then(setReadLaterItems))
+    },
+    [adapter]
+  )
 
   const isInReadLater = useCallback(
     (id: string) => readLaterItems.some(i => i.id === id),
