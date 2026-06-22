@@ -61,12 +61,3 @@ jobs:
       - name: Build
         run: pnpm build
 
-  deploy:
-    needs: quality
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    steps:
-      - name: Trigger Coolify deployment
-        run: |
-          curl -fsSL -X POST "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
-            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
