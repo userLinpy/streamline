@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useMemo } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
@@ -69,7 +69,7 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
   const { history, clearHistory, clearByPeriod } = useHistory()
   const [period, setPeriod] = useState<Period>('all')
 
-  const now = useMemo(() => Date.now(), [])
+  const [now] = useState(() => Date.now())
   const cutoffs: Record<Period, number> = {
     today: now - 24 * 60 * 60 * 1000,
     week: now - 7 * 24 * 60 * 60 * 1000,
@@ -219,7 +219,6 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
             {/* Avatar */}
             <div className="flex items-center gap-4">
               {imgUrl && !imgError ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={imgUrl}
                   alt="Avatar"
