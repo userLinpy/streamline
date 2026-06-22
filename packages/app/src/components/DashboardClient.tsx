@@ -6,7 +6,6 @@ import type { TechItem } from '@/types'
 import { TechCard } from './TechCard'
 import { FilterPanel } from './FilterPanel'
 import { ThemeToggle } from './ThemeToggle'
-import { SettingsDrawer } from './SettingsDrawer'
 import { useReadLater } from '@/hooks/useReadLater'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useFilters } from '@/hooks/useFilters'
@@ -35,7 +34,6 @@ export function DashboardClient({ initialItems }: Props) {
   const [asyncItems, setAsyncItems] = useState<TechItem[]>([])
   const [customReleases, setCustomReleases] = useState<TechItem[]>([])
   const [rssFeedItems, setRssFeedItems] = useState<TechItem[]>([])
-  const [showSettings, setShowSettings] = useState(false)
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const autocompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -316,13 +314,13 @@ export function DashboardClient({ initialItems }: Props) {
         {searching && (
           <span className="text-xs text-zinc-400 shrink-0">Recherche…</span>
         )}
-        <button
-          onClick={() => setShowSettings(true)}
+        <Link
+          href="/settings"
           className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
-          title="Historique"
+          title="Paramètres"
         >
           <Settings size={14} />
-        </button>
+        </Link>
         <ThemeToggle />
         {session?.user ? (
           <div className="flex items-center gap-2">
@@ -355,9 +353,6 @@ export function DashboardClient({ initialItems }: Props) {
           </Link>
         )}
       </header>
-
-      {/* Settings drawer */}
-      {showSettings && <SettingsDrawer onClose={() => setShowSettings(false)} />}
 
       {/* Tabs */}
       <div className="bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 px-3 py-2 flex gap-1.5 flex-wrap">
