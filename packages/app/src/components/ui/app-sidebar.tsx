@@ -145,7 +145,7 @@ export function AppSidebar({ isCollapsed, onCollapsedChange }: Props) {
         `}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-slate-700 shrink-0">
+        <div className="group flex items-center justify-between px-4 py-4 border-b border-slate-700 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shrink-0">
               <span className="text-white font-bold text-sm">S</span>
@@ -157,7 +157,7 @@ export function AppSidebar({ isCollapsed, onCollapsedChange }: Props) {
           <button
             onClick={() => onCollapsedChange(!isCollapsed)}
             aria-label={isCollapsed ? 'Développer' : 'Réduire'}
-            className="hidden lg:flex p-1.5 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-white transition-colors shrink-0"
+            className="hidden lg:flex p-1.5 rounded-lg hover:bg-slate-700 text-slate-400 hover:text-white transition-all opacity-0 group-hover:opacity-100 shrink-0"
           >
             <ChevronLeft
               size={18}
