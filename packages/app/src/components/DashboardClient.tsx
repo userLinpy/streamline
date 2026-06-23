@@ -267,9 +267,9 @@ export function DashboardClient({ initialItems }: Props) {
       <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 pr-4 pl-14 lg:pl-4 py-3 flex items-center gap-2 sticky top-0 z-10 shadow-sm">
         {/* Left title + animated search bar */}
         <div className="relative flex-1 min-w-0 flex items-center">
-          {/* Active tab name — shown when search is closed */}
-          <span className={`text-sm font-semibold text-zinc-700 dark:text-zinc-200 truncate transition-opacity duration-200 ${searchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-            {tabs.find(t => t.id === activeTab)?.label ?? 'News'}
+          {/* Sidebar section name — always visible */}
+          <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 truncate">
+            Accueil
           </span>
 
           {/* Inner: ml-auto pushes to right, max-width 0→50% animates right→left */}

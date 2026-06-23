@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   Clock,
   Download,
@@ -13,6 +14,7 @@ import {
   BarChart3,
   Bell,
 } from 'lucide-react'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import type { Section } from '@/components/ui/app-sidebar'
 import { useHistory } from '@/hooks/useHistory'
 import { formatRelativeDate } from '@/lib/utils'
@@ -190,11 +192,30 @@ export function SettingsClient({
     'px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50'
 
   return (
-    <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-16 lg:pt-8 pb-8">
-      {/* Section title */}
-      <h1 className="text-xl font-semibold text-zinc-900 dark:text-white mb-6">
-        {SECTION_LABELS[section]}
-      </h1>
+    <>
+      <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 pr-4 pl-14 lg:pl-4 py-3 flex items-center gap-2 sticky top-0 z-10 shadow-sm">
+        <span className="flex-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200">
+          {SECTION_LABELS[section]}
+        </span>
+        <ThemeToggle />
+        {isAuthenticated ? (
+          <Link href="/settings?s=profile" title={name ?? 'Mon profil'}
+            className="hover:ring-2 hover:ring-indigo-500 rounded-full transition-all">
+            {image ? (
+              <Image src={image} alt={name ?? 'Avatar'} width={28} height={28} className="rounded-full" />
+            ) : (
+              <div className="w-7 h-7 rounded-full bg-zinc-300 dark:bg-zinc-600 flex items-center justify-center text-xs font-medium">
+                {initials}
+              </div>
+            )}
+          </Link>
+        ) : (
+          <Link href="/login" className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+            Se connecter
+          </Link>
+        )}
+      </header>
+    <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-8 pb-8">
 
       {/* Feedback */}
       {msg && (
@@ -516,5 +537,6 @@ export function SettingsClient({
         </>
       )}
     </div>
+    </>
   )
 }
