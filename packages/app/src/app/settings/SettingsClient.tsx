@@ -13,6 +13,7 @@ import {
   Trash2,
   ArrowLeft,
   History,
+  Lock,
 } from 'lucide-react'
 import { useHistory } from '@/hooks/useHistory'
 import { formatRelativeDate } from '@/lib/utils'
@@ -45,13 +46,31 @@ const TABS: { id: Tab; Icon: (props: { size?: number; className?: string }) => R
 ]
 
 interface Props {
+  isAuthenticated: boolean
   name: string | null
   email: string | null
   image: string | null
   hasPassword: boolean
 }
 
-export function SettingsClient({ name, email, image, hasPassword }: Props) {
+function AuthGate() {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 gap-3 text-zinc-400">
+      <Lock size={28} className="opacity-40" />
+      <p className="text-sm text-zinc-500 text-center">
+        Connecte-toi pour accéder à cette section
+      </p>
+      <Link
+        href="/login"
+        className="px-4 py-2 rounded-lg bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-medium hover:opacity-90 transition-opacity"
+      >
+        Se connecter
+      </Link>
+    </div>
+  )
+}
+
+export function SettingsClient({ isAuthenticated, name, email, image, hasPassword }: Props) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('profile')
   const [isPending, startTransition] = useTransition()
@@ -212,7 +231,7 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
       {/* Tab content */}
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
         {/* ── PROFIL ─────────────────────────────────────────────────── */}
-        {activeTab === 'profile' && (
+        {activeTab === 'profile' && (isAuthenticated ? (
           <form onSubmit={handleProfile} className="space-y-5">
             <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-4">Profil</h2>
 
@@ -270,10 +289,10 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
               {isPending ? 'Enregistrement…' : 'Enregistrer'}
             </button>
           </form>
-        )}
+        ) : <AuthGate />)}
 
         {/* ── SÉCURITÉ ───────────────────────────────────────────────── */}
-        {activeTab === 'security' && (
+        {activeTab === 'security' && (isAuthenticated ? (
           <div className="space-y-8">
             <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Sécurité</h2>
 
@@ -326,7 +345,7 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
               </button>
             </div>
           </div>
-        )}
+        ) : <AuthGate />)}
 
         {/* ── HISTORIQUE ─────────────────────────────────────────────── */}
         {activeTab === 'history' && (
@@ -432,7 +451,7 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
         )}
 
         {/* ── DONNÉES ────────────────────────────────────────────────── */}
-        {activeTab === 'data' && (
+        {activeTab === 'data' && (isAuthenticated ? (
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">Données</h2>
             <p className="text-xs text-zinc-500">
@@ -447,10 +466,10 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
               {isPending ? 'Export en cours…' : 'Exporter mes données (JSON)'}
             </button>
           </div>
-        )}
+        ) : <AuthGate />)}
 
         {/* ── ZONE DANGER ────────────────────────────────────────────── */}
-        {activeTab === 'danger' && (
+        {activeTab === 'danger' && (isAuthenticated ? (
           <div className="space-y-4">
             <h2 className="text-sm font-semibold text-red-600">Zone danger</h2>
             <p className="text-xs text-zinc-500">
@@ -465,7 +484,7 @@ export function SettingsClient({ name, email, image, hasPassword }: Props) {
               Supprimer mon compte
             </button>
           </div>
-        )}
+        ) : <AuthGate />)}
       </div>
 
       {/* Delete confirmation modal */}
