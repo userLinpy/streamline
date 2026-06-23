@@ -23,6 +23,12 @@ type Tab = 'news' | 'readlater' | 'favorites'
 
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
 
+function itemRoute(item: TechItem): string {
+  if (item.source === 'devto') return `/article/${item.id}`
+  if (item.source === 'github') return `/repo/${item.id}`
+  return item.url
+}
+
 type Props = { initialItems: TechItem[] }
 
 export function DashboardClient({ initialItems }: Props) {
@@ -273,9 +279,11 @@ export function DashboardClient({ initialItems }: Props) {
     setIsRefreshing(false)
 
     if (isAuto && newItems.length > 0) {
+      const href = newItems.length === 1 ? itemRoute(newItems[0]) : '/'
       addNotification({
         title: 'Nouveau contenu disponible',
         body: `${newItems.length} article${newItems.length > 1 ? 's' : ''} ajouté${newItems.length > 1 ? 's' : ''}`,
+        href,
       })
     }
   }, [router, addNotification])
@@ -348,7 +356,7 @@ export function DashboardClient({ initialItems }: Props) {
                   autocompleteTimeoutRef.current = setTimeout(() => setShowAutocomplete(false), 150)
                 }}
                 placeholder="Rechercher… (Entrée = recherche étendue)"
-                className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700"
+                className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-400 dark:focus:border-indigo-500"
               />
             </div>
           </div>
@@ -369,10 +377,14 @@ export function DashboardClient({ initialItems }: Props) {
                 </div>
               )}
               {autocompleteItems.map((item, i) => (
-                <button
+                <div
                   key={i}
+                  role="option"
+                  aria-selected={false}
+                  tabIndex={0}
                   onClick={() => applyAutocomplete(item.value)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') applyAutocomplete(item.value) }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                   <span className="text-zinc-300 dark:text-zinc-600 shrink-0 text-xs w-4">
                     {item.type === 'search' ? '🕐' : item.type === 'tag' ? '#' : '→'}
@@ -389,7 +401,7 @@ export function DashboardClient({ initialItems }: Props) {
                       <X size={10} />
                     </button>
                   )}
-                </button>
+                </div>
               ))}
             </div>
           )}

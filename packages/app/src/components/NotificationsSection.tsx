@@ -1,7 +1,9 @@
 'use client'
 
-import { BellOff, Bell, Check, Trash2 } from 'lucide-react'
+import { BellOff, Bell, Check, Trash2, ExternalLink, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useNotifications } from '@/hooks/useNotifications'
+import type { AppNotification } from '@/hooks/useNotifications'
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -14,8 +16,23 @@ function relativeTime(iso: string): string {
   return `il y a ${d} j`
 }
 
+function isExternal(href: string) {
+  return href.startsWith('http')
+}
+
 export function NotificationsSection() {
+  const router = useRouter()
   const { notifications, markRead, markAllRead, clearAll, unreadCount } = useNotifications()
+
+  function handleClick(notif: AppNotification) {
+    markRead(notif.id)
+    if (!notif.href) return
+    if (isExternal(notif.href)) {
+      window.open(notif.href, '_blank', 'noopener,noreferrer')
+    } else {
+      router.push(notif.href)
+    }
+  }
 
   if (notifications.length === 0) {
     return (
@@ -62,9 +79,11 @@ export function NotificationsSection() {
             key={notif.id}
             role="button"
             tabIndex={0}
-            onClick={() => markRead(notif.id)}
-            onKeyDown={e => { if (e.key === 'Enter') markRead(notif.id) }}
-            className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors ${
+            onClick={() => handleClick(notif)}
+            onKeyDown={e => { if (e.key === 'Enter') handleClick(notif) }}
+            className={`flex items-start gap-3 p-3 rounded-xl transition-colors ${
+              notif.href ? 'cursor-pointer' : 'cursor-default'
+            } ${
               notif.read
                 ? 'bg-zinc-50 dark:bg-zinc-800/30 hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
                 : 'bg-indigo-50 dark:bg-indigo-950/30 hover:bg-indigo-100 dark:hover:bg-indigo-950/50'
@@ -87,9 +106,16 @@ export function NotificationsSection() {
               <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-0.5">{notif.body}</p>
               <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">{relativeTime(notif.createdAt)}</p>
             </div>
-            {!notif.read && (
-              <div className="w-2 h-2 rounded-full bg-indigo-500 shrink-0 mt-1.5" />
-            )}
+            <div className="shrink-0 flex items-center gap-1.5 mt-0.5">
+              {!notif.read && (
+                <div className="w-2 h-2 rounded-full bg-indigo-500" />
+              )}
+              {notif.href && (
+                isExternal(notif.href)
+                  ? <ExternalLink size={13} className="text-zinc-400 dark:text-zinc-500" />
+                  : <ArrowRight size={13} className="text-zinc-400 dark:text-zinc-500" />
+              )}
+            </div>
           </div>
         ))}
       </div>

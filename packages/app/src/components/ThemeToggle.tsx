@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, useMotionValue, useTransform } from 'framer-motion'
 
 const DURATION = 0.7
@@ -68,9 +68,11 @@ function SolarSwitch({ isDark }: { isDark: boolean }) {
 }
 
 export function ThemeToggle() {
-  const [dark, setDark] = useState(
-    () => typeof window !== 'undefined' && document.documentElement.classList.contains('dark')
-  )
+  const [dark, setDark] = useState(false)
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains('dark'))
+  }, [])
 
   const toggle = () => {
     const next = !dark

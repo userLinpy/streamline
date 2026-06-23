@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 export type AppNotification = {
   id: string
@@ -8,6 +8,7 @@ export type AppNotification = {
   body: string
   createdAt: string
   read: boolean
+  href?: string
 }
 
 const KEY = 'streamline-notifications'
@@ -33,45 +34,53 @@ function persist(notifications: AppNotification[]) {
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<AppNotification[]>([])
+  // Ref so mutation callbacks always read the latest state without stale closures
+  const ref = useRef<AppNotification[]>([])
 
   useEffect(() => {
-    setNotifications(load())
-    const sync = () => setNotifications(load())
+    const loaded = load()
+    ref.current = loaded
+    setNotifications(loaded)
+    const sync = () => {
+      const next = load()
+      ref.current = next
+      setNotifications(next)
+    }
     window.addEventListener(CHANGE_EVENT, sync)
     return () => window.removeEventListener(CHANGE_EVENT, sync)
   }, [])
 
-  const addNotification = useCallback((notif: Pick<AppNotification, 'title' | 'body'>) => {
+  const addNotification = useCallback((notif: Pick<AppNotification, 'title' | 'body' | 'href'>) => {
     const entry: AppNotification = {
-      ...notif,
       id: String(Date.now()),
+      title: notif.title,
+      body: notif.body,
       createdAt: new Date().toISOString(),
       read: false,
+      ...(notif.href !== undefined ? { href: notif.href } : {}),
     }
-    setNotifications(prev => {
-      const next = [entry, ...prev].slice(0, MAX)
-      persist(next)
-      return next
-    })
+    const next = [entry, ...ref.current].slice(0, MAX)
+    ref.current = next
+    setNotifications(next)
+    persist(next)
   }, [])
 
   const markRead = useCallback((id: string) => {
-    setNotifications(prev => {
-      const next = prev.map(n => (n.id === id ? { ...n, read: true } : n))
-      persist(next)
-      return next
-    })
+    const next = ref.current.map(n => (n.id === id ? { ...n, read: true } : n))
+    ref.current = next
+    setNotifications(next)
+    persist(next)
   }, [])
 
   const markAllRead = useCallback(() => {
-    setNotifications(prev => {
-      const next = prev.map(n => ({ ...n, read: true }))
-      persist(next)
-      return next
-    })
+    const next = ref.current.map(n => ({ ...n, read: true }))
+    ref.current = next
+    setNotifications(next)
+    persist(next)
   }, [])
 
   const clearAll = useCallback(() => {
+    ref.current = []
     setNotifications([])
     persist([])
   }, [])
