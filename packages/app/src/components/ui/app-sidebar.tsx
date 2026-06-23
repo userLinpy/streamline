@@ -19,6 +19,7 @@ import {
   X,
   ChevronLeft,
 } from 'lucide-react'
+import { useNotifications } from '@/hooks/useNotifications'
 
 export type Section =
   | 'statistiques'
@@ -87,6 +88,8 @@ export function AppSidebar({ isCollapsed, onCollapsedChange }: Props) {
 
   const isAuthenticated = status === 'authenticated'
   const user = session?.user
+
+  const { unreadCount } = useNotifications()
 
   const rawSection = searchParams.get('s')
   const activeSection: Section = (VALID_SECTIONS.includes(rawSection as Section) ? rawSection : null) as Section
@@ -209,7 +212,12 @@ export function AppSidebar({ isCollapsed, onCollapsedChange }: Props) {
                         }`}
                       />
                       {!isCollapsed && <span className="truncate">{item.label}</span>}
-                      {isActive && !isCollapsed && (
+                      {item.id === 'notifications' && unreadCount > 0 && (
+                        <span className={`${isCollapsed ? '' : 'ml-auto'} min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] font-bold shrink-0`}>
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                      {isActive && !isCollapsed && item.id !== 'notifications' && (
                         <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/80 shrink-0" />
                       )}
                     </Link>

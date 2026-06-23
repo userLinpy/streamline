@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { Search, X, Newspaper, Bookmark, Star } from 'lucide-react'
+import { Search, X, Newspaper, Bookmark, Star, RefreshCw } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type { TechItem } from '@/types'
 import { TechCard } from './TechCard'
 import { FilterPanel } from './FilterPanel'
@@ -12,6 +13,7 @@ import { useFilters } from '@/hooks/useFilters'
 import { useWatchedRepos } from '@/hooks/useWatchedRepos'
 import { useWatchedFeeds } from '@/hooks/useWatchedFeeds'
 import { useRecentSearches } from '@/hooks/useRecentSearches'
+import { useNotifications } from '@/hooks/useNotifications'
 import { PREDEFINED_TAGS } from '@/hooks/useFilters'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
@@ -25,6 +27,7 @@ type Props = { initialItems: TechItem[] }
 
 export function DashboardClient({ initialItems }: Props) {
   const { data: session } = useSession()
+  const router = useRouter()
 
   const [activeTab, setActiveTab] = useState<Tab>('news')
   const [query, setQuery] = useState('')
@@ -36,8 +39,12 @@ export function DashboardClient({ initialItems }: Props) {
   const [rssFeedItems, setRssFeedItems] = useState<TechItem[]>([])
   const [showAutocomplete, setShowAutocomplete] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const autocompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const { addNotification } = useNotifications()
 
   const { readLaterItems, addToReadLater, removeFromReadLater, isInReadLater } = useReadLater()
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites()
@@ -237,6 +244,48 @@ export function DashboardClient({ initialItems }: Props) {
     })
   }, [])
 
+  const handleRefresh = useCallback(async (isAuto = false) => {
+    setIsRefreshing(true)
+    router.refresh()
+
+    const sources = ['/api/devto', '/api/hackernews', '/api/releases-default']
+    const newItems: TechItem[] = []
+
+    await Promise.allSettled(
+      sources.map(async url => {
+        try {
+          const data = await fetch(url).then(r => r.json() as Promise<TechItem[]>)
+          if (!Array.isArray(data)) return
+          setAsyncItems(prev => {
+            const existingIds = new Set(prev.map(i => i.id))
+            const fresh = data.filter(i => !existingIds.has(i.id))
+            if (fresh.length > 0) {
+              newItems.push(...fresh)
+              return [...prev, ...fresh]
+            }
+            return prev
+          })
+        } catch {}
+      })
+    )
+
+    setLastRefresh(new Date())
+    setIsRefreshing(false)
+
+    if (isAuto && newItems.length > 0) {
+      addNotification({
+        title: 'Nouveau contenu disponible',
+        body: `${newItems.length} article${newItems.length > 1 ? 's' : ''} ajouté${newItems.length > 1 ? 's' : ''}`,
+      })
+    }
+  }, [router, addNotification])
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => { void handleRefresh(true) }, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [handleRefresh])
+
   const tabs: { id: Tab; icon: React.ReactNode; label: string; count: number; activeClass: string }[] = [
     {
       id: 'news',
@@ -351,6 +400,16 @@ export function DashboardClient({ initialItems }: Props) {
         )}
 
         <div className="ml-auto flex items-center gap-2 shrink-0">
+          {/* Refresh button */}
+          <button
+            onClick={() => { void handleRefresh(false) }}
+            title={lastRefresh ? `Dernière maj : ${lastRefresh.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : 'Rafraîchir'}
+            disabled={isRefreshing}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-40"
+          >
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+          </button>
+
           {/* Search toggle button */}
           <button
             onClick={toggleSearch}

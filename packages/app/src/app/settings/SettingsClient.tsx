@@ -19,6 +19,8 @@ import type { Section } from '@/components/ui/app-sidebar'
 import { useHistory } from '@/hooks/useHistory'
 import { formatRelativeDate } from '@/lib/utils'
 import { SourceIcon } from '@/components/SourceIcon'
+import { StatsSection } from '@/components/StatsSection'
+import { NotificationsSection } from '@/components/NotificationsSection'
 import {
   updateProfile,
   changePassword,
@@ -234,20 +236,10 @@ export function SettingsClient({
       <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-6">
 
         {/* ── STATISTIQUES ─────────────────────────────────────────── */}
-        {section === 'statistiques' && (
-          <div className="flex flex-col items-center justify-center py-12 gap-3 text-zinc-400">
-            <BarChart3 size={28} className="opacity-30" />
-            <p className="text-sm text-zinc-500">Fonctionnalité à venir</p>
-          </div>
-        )}
+        {section === 'statistiques' && <StatsSection />}
 
         {/* ── NOTIFICATIONS ────────────────────────────────────────── */}
-        {section === 'notifications' && (
-          <div className="flex flex-col items-center justify-center py-12 gap-3 text-zinc-400">
-            <Bell size={28} className="opacity-30" />
-            <p className="text-sm text-zinc-500">Fonctionnalité à venir</p>
-          </div>
-        )}
+        {section === 'notifications' && <NotificationsSection />}
 
         {/* ── PROFIL ───────────────────────────────────────────────── */}
         {section === 'profile' && (isAuthenticated ? (
