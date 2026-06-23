@@ -272,7 +272,7 @@ export function DashboardClient({ initialItems }: Props) {
           <div
             className={`w-full overflow-hidden transition-[max-width,opacity] duration-300 ease-in-out ${
               searchOpen
-                ? 'max-w-full opacity-100'
+                ? 'max-w-[50%] opacity-100'
                 : 'max-w-0 opacity-0 pointer-events-none'
             }`}
           >
