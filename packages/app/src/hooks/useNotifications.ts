@@ -40,6 +40,7 @@ export function useNotifications() {
   useEffect(() => {
     const loaded = load()
     ref.current = loaded
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNotifications(loaded)
     const sync = () => {
       const next = load()

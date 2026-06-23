@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { BarChart3, Clock, Star, Bookmark } from 'lucide-react'
 import { useHistory } from '@/hooks/useHistory'
 import { useFavorites } from '@/hooks/useFavorites'
@@ -28,17 +28,17 @@ export function StatsSection() {
   const { history } = useHistory()
   const { favorites } = useFavorites()
   const { readLaterItems } = useReadLater()
+  const [now] = useState(Date.now)
 
   const DAY_MS = 24 * 60 * 60 * 1000
 
   const periodCounts = useMemo(() => {
-    const now = Date.now()
     return {
       today: history.filter(e => now - new Date(e.visitedAt).getTime() < DAY_MS).length,
       week: history.filter(e => now - new Date(e.visitedAt).getTime() < 7 * DAY_MS).length,
       month: history.filter(e => now - new Date(e.visitedAt).getTime() < 30 * DAY_MS).length,
     }
-  }, [history, DAY_MS])
+  }, [history, now, DAY_MS])
 
   const sourceCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -65,7 +65,7 @@ export function StatsSection() {
       <div className="flex flex-col items-center justify-center py-12 gap-3">
         <BarChart3 size={28} className="text-zinc-300 dark:text-zinc-600" />
         <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center">
-          Aucune donnée pour l'instant — consulte quelques articles d'abord
+          {"Aucune donnée pour l'instant — consulte quelques articles d'abord"}
         </p>
       </div>
     )
