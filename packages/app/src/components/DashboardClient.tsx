@@ -347,8 +347,6 @@ export function DashboardClient({ initialItems }: Props) {
         )}
 
         <div className="ml-auto flex items-center gap-2 shrink-0">
-          <ThemeToggle />
-
           {/* Search toggle button */}
           <button
             onClick={toggleSearch}
@@ -361,6 +359,8 @@ export function DashboardClient({ initialItems }: Props) {
           >
             {searchOpen ? <X size={14} /> : <Search size={14} />}
           </button>
+
+          <ThemeToggle />
 
           {session?.user ? (
             <Link
