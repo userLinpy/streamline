@@ -265,12 +265,16 @@ export function DashboardClient({ initialItems }: Props) {
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
       <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 pr-4 pl-14 lg:pl-4 py-3 flex items-center gap-2 sticky top-0 z-10 shadow-sm">
-        {/* Animated search bar — expands from right to left */}
-        {/* Outer: flex-1 + justify-end anchors right edge next to controls */}
-        <div className="relative flex-1 min-w-0 flex justify-end">
-          {/* Inner: max-width transition (0→100%) is CSS-animatable unlike flex-1 */}
+        {/* Left title + animated search bar */}
+        <div className="relative flex-1 min-w-0 flex items-center">
+          {/* Active tab name — shown when search is closed */}
+          <span className={`text-sm font-semibold text-zinc-700 dark:text-zinc-200 truncate transition-opacity duration-200 ${searchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            {tabs.find(t => t.id === activeTab)?.label ?? 'News'}
+          </span>
+
+          {/* Inner: ml-auto pushes to right, max-width 0→50% animates right→left */}
           <div
-            className={`w-full overflow-hidden transition-[max-width,opacity] duration-300 ease-in-out ${
+            className={`ml-auto w-full overflow-hidden transition-[max-width,opacity] duration-300 ease-in-out ${
               searchOpen
                 ? 'max-w-[50%] opacity-100'
                 : 'max-w-0 opacity-0 pointer-events-none'
@@ -299,10 +303,10 @@ export function DashboardClient({ initialItems }: Props) {
               />
             </div>
           </div>
-          {/* Autocomplete outside overflow-hidden — positioned relative to outer wrapper */}
+          {/* Autocomplete — aligned under the search bar (right-anchored, 50% wide) */}
           {showAutocomplete && autocompleteItems.length > 0 && (
             <div
-              className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-50 overflow-hidden"
+              className="absolute top-full right-0 w-[50%] mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-50 overflow-hidden"
               onMouseDown={e => {
                 e.preventDefault()
                 if (autocompleteTimeoutRef.current) clearTimeout(autocompleteTimeoutRef.current)
