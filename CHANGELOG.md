@@ -13,6 +13,7 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 
 ### Changed
 
+- **DashboardClient — barre de recherche escamotable** : remplacement de la barre de recherche toujours visible par une icône loupe. Clic sur l'icône → la barre apparaît animée (expansion droite→gauche via `max-width: 0→100%` + `opacity`). Bouton toggle loupe/× avec style actif indigo. Touche Échap pour fermer. Autofocus à l'ouverture. Autocomplete repositionné hors du container `overflow-hidden` pour rester visible. Animation CSS pure (`transition-[max-width,opacity] duration-300`).
 - **Settings** : page `/settings` refactorisée — suppression de la sidebar locale (`SettingsSidebar`), navigation par URL param `?s=<section>` lue depuis `searchParams` (Server Component). `SettingsClient` simplifié en pur renderer de section.
 - **DashboardClient** : suppression du bouton ⚙️ (link `<Settings>` vers `/settings`) — navigation paramètres désormais via la sidebar globale. Header padding `pl-14 lg:pl-4` pour laisser la place au hamburger mobile.
 - **Settings** : page `/settings` accessible sans connexion — onglet Historique public (données localStorage), onglets Profil, Sécurité, Données et Zone Danger protégés par `AuthGate` (cadenas + lien `/login`) ; suppression du `redirect('/login')` côté serveur

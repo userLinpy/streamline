@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { Search, X, Newspaper, Bookmark, Star } from 'lucide-react'
 import type { TechItem } from '@/types'
 import { TechCard } from './TechCard'
@@ -35,7 +35,9 @@ export function DashboardClient({ initialItems }: Props) {
   const [customReleases, setCustomReleases] = useState<TechItem[]>([])
   const [rssFeedItems, setRssFeedItems] = useState<TechItem[]>([])
   const [showAutocomplete, setShowAutocomplete] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const autocompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const { readLaterItems, addToReadLater, removeFromReadLater, isInReadLater } = useReadLater()
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites()
@@ -214,11 +216,26 @@ export function DashboardClient({ initialItems }: Props) {
     setSearchError(false)
   }
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setQuery('')
     setSearchResults(null)
     setSearchError(false)
-  }
+  }, [])
+
+  const toggleSearch = useCallback(() => {
+    setSearchOpen(prev => {
+      const next = !prev
+      if (!next) {
+        setQuery('')
+        setSearchResults(null)
+        setSearchError(false)
+        setShowAutocomplete(false)
+      } else {
+        setTimeout(() => inputRef.current?.focus(), 50)
+      }
+      return next
+    })
+  }, [])
 
   const tabs: { id: Tab; icon: React.ReactNode; label: string; count: number; activeClass: string }[] = [
     {
@@ -247,25 +264,42 @@ export function DashboardClient({ initialItems }: Props) {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
-      <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 pr-4 pl-14 lg:pl-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
-        <div className="relative flex-1 min-w-0">
-          <Search
-            size={13}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
-          />
-          <input
-            type="search"
-            value={query}
-            onChange={e => handleQueryChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setShowAutocomplete(true)}
-            onBlur={() => {
-              autocompleteTimeoutRef.current = setTimeout(() => setShowAutocomplete(false), 150)
-            }}
-            placeholder="Rechercher… (Entrée = recherche étendue)"
-            className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700"
-          />
-          {/* Autocomplete dropdown */}
+      <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 pr-4 pl-14 lg:pl-4 py-3 flex items-center gap-2 sticky top-0 z-10 shadow-sm">
+        {/* Animated search bar — expands from right to left */}
+        {/* Outer: flex-1 + justify-end anchors right edge next to controls */}
+        <div className="relative flex-1 min-w-0 flex justify-end">
+          {/* Inner: max-width transition (0→100%) is CSS-animatable unlike flex-1 */}
+          <div
+            className={`w-full overflow-hidden transition-[max-width,opacity] duration-300 ease-in-out ${
+              searchOpen
+                ? 'max-w-full opacity-100'
+                : 'max-w-0 opacity-0 pointer-events-none'
+            }`}
+          >
+            <div className="relative">
+              <Search
+                size={13}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
+              />
+              <input
+                ref={inputRef}
+                type="search"
+                value={query}
+                onChange={e => handleQueryChange(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Escape') { toggleSearch(); return }
+                  handleKeyDown(e)
+                }}
+                onFocus={() => setShowAutocomplete(true)}
+                onBlur={() => {
+                  autocompleteTimeoutRef.current = setTimeout(() => setShowAutocomplete(false), 150)
+                }}
+                placeholder="Rechercher… (Entrée = recherche étendue)"
+                className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700"
+              />
+            </div>
+          </div>
+          {/* Autocomplete outside overflow-hidden — positioned relative to outer wrapper */}
           {showAutocomplete && autocompleteItems.length > 0 && (
             <div
               className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-50 overflow-hidden"
@@ -307,38 +341,56 @@ export function DashboardClient({ initialItems }: Props) {
             </div>
           )}
         </div>
+
         {searching && (
           <span className="text-xs text-zinc-400 shrink-0">Recherche…</span>
         )}
-        <ThemeToggle />
-        {session?.user ? (
-          <Link
-            href="/settings?s=profile"
-            title={session.user.name ?? 'Mon profil'}
-            className="shrink-0 hover:ring-2 hover:ring-indigo-500 rounded-full transition-all"
+
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          <ThemeToggle />
+
+          {/* Search toggle button */}
+          <button
+            onClick={toggleSearch}
+            title={searchOpen ? 'Fermer la recherche' : 'Rechercher'}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+              searchOpen
+                ? 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
+                : 'border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'
+            }`}
           >
-            {session.user.image ? (
-              <Image
-                src={session.user.image}
-                alt={session.user.name ?? 'Avatar'}
-                width={28}
-                height={28}
-                className="rounded-full"
-              />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-zinc-300 dark:bg-zinc-600 flex items-center justify-center text-xs font-medium">
-                {(session.user.name ?? session.user.email ?? '?')[0].toUpperCase()}
-              </div>
-            )}
-          </Link>
-        ) : (
-          <Link
-            href="/login"
-            className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors shrink-0"
-          >
-            Se connecter
-          </Link>
-        )}
+            {searchOpen ? <X size={14} /> : <Search size={14} />}
+          </button>
+
+          {session?.user ? (
+            <Link
+              href="/settings?s=profile"
+              title={session.user.name ?? 'Mon profil'}
+              className="hover:ring-2 hover:ring-indigo-500 rounded-full transition-all"
+            >
+              {session.user.image ? (
+                <Image
+                  src={session.user.image}
+                  alt={session.user.name ?? 'Avatar'}
+                  width={28}
+                  height={28}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-zinc-300 dark:bg-zinc-600 flex items-center justify-center text-xs font-medium">
+                  {(session.user.name ?? session.user.email ?? '?')[0].toUpperCase()}
+                </div>
+              )}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              Se connecter
+            </Link>
+          )}
+        </div>
       </header>
 
       {/* Tabs */}
