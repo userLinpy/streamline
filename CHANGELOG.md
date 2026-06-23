@@ -7,7 +7,13 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 
 ## [Unreleased]
 
+### Changed
+
+- **Settings** : page `/settings` accessible sans connexion — onglet Historique public (données localStorage), onglets Profil, Sécurité, Données et Zone Danger protégés par `AuthGate` (cadenas + lien `/login`) ; suppression du `redirect('/login')` côté serveur
+
 ### Added
+
+- **Settings** : page `/settings` (route protégée) avec 5 onglets — Profil (pseudo + photo URL), Sécurité (changement mdp + déconnexion tous appareils), Historique (ancien `SettingsDrawer` intégré), Données (export JSON favoris + read-later), Zone Danger (suppression compte avec confirmation "SUPPRIMER"). 5 Server Actions dans `src/actions/profile.ts` : `updateProfile`, `changePassword`, `revokeAllSessions`, `deleteAccount`, `exportData`. Champ mdp masqué pour les utilisateurs GitHub OAuth (`hasPassword` vérifié côté serveur). 14 tests unitaires. `SettingsDrawer` supprimé.
 
 - **Auth + Sync Cloud** : authentification GitHub OAuth + email/password (NextAuth v5), synchronisation cloud des données utilisateur (Prisma 6 → Neon PostgreSQL). Pattern Adapter : `LocalStorageAdapter` (anonyme) et `CloudAdapter` (connecté). Migration automatique localStorage → cloud à l'inscription. Pages `/login` et `/register`. Bouton login/logout dans le header.
 
@@ -73,4 +79,5 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 
 ### BDD
 
+- **Settings** : ajout de `tokenVersion Int @default(0)` sur le modèle `User` — permet l'invalidation des JWT en circulation via `prisma db push` (ajout de colonne avec défaut, non destructif).
 - **Auth + Sync Cloud** : schéma Prisma 6 ajouté — 11 modèles (User, Account, Session, VerificationToken, Favorite, ReadLater, HistoryEntry, WatchedRepo, WatchedFeed, UserPreferences, RecentSearch) sur Neon PostgreSQL. Remplace l'absence de BDD du MVP (ADR-003 superseded).

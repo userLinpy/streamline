@@ -1,15 +1,27 @@
 ---
 feature: settings
-version: 0.1.0
+version: 0.2.1
 date: 2026-06-23
-status: draft
+status: implemented
 ---
 
 # Spec Technique — Settings
 
 ## Architecture
 
-Page Server Component `/settings` qui vérifie la session côté serveur et redirige si non connecté. Onglets gérés côté client (`'use client'`). Mutations via Server Actions dans `src/actions/profile.ts`.
+Page Server Component `/settings` accessible à tous — aucune redirection côté serveur. Onglets gérés côté client (`'use client'`). Mutations via Server Actions dans `src/actions/profile.ts`.
+
+## Comportement auth
+
+| Onglet | Accès sans connexion |
+|--------|----------------------|
+| Historique | Accessible — données stockées en localStorage, indépendantes du compte |
+| Profil | Bloqué — affiche `AuthGate` (cadenas + message + lien `/login`) |
+| Sécurité | Bloqué — affiche `AuthGate` |
+| Données | Bloqué — affiche `AuthGate` |
+| Zone Danger | Bloqué — affiche `AuthGate` |
+
+`AuthGate` est un composant client inline dans `SettingsClient.tsx` — il remplace le contenu de l'onglet si `session` est null. Pas de redirection : l'utilisateur reste sur `/settings` et peut naviguer librement entre les onglets publics.
 
 ### Onglets
 
@@ -47,38 +59,57 @@ Migration : `prisma db push` (ajout de colonne avec défaut, non destructif).
 ## Server Actions — `src/actions/profile.ts`
 
 ```typescript
-updateProfile(data: { name?: string; image?: string }): Promise<{ error?: string }>
+updateProfile(data: { name?: string; image?: string | null }): Promise<{ error?: string }>
 changePassword(data: { current: string; next: string }): Promise<{ error?: string }>
-revokeAllSessions(): Promise<void>  // incrémente tokenVersion
+// Erreurs possibles : 'Non connecté', 'Compte OAuth — pas de mot de passe local',
+// 'Mot de passe actuel incorrect', 'Mot de passe trop court (min 8 caractères)'
+revokeAllSessions(): Promise<void>  // incrémente tokenVersion via { increment: 1 }
 deleteAccount(): Promise<void>       // supprime user (cascade)
 exportData(): Promise<{ favorites: TechItem[]; readLater: TechItem[] }>
 ```
 
+Toutes les actions commencent par `getUserId()` — helper interne qui appelle `auth()` et retourne `session?.user?.id ?? null`. Pas de Zod côté Server Action (validation portée par les formulaires client).
+
 ## Auth — callback JWT mis à jour
 
 ```typescript
-async jwt({ token, user, trigger }) {
+async jwt({ token, user }) {
   if (user) {
+    // Connexion initiale : stocker id + tokenVersion courant depuis la DB
     token.id = user.id
-    token.tokenVersion = 0
+    const dbUser = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { tokenVersion: true },
+    })
+    token.tokenVersion = dbUser?.tokenVersion ?? 0
+    return token
   }
-  // Vérification tokenVersion à chaque refresh
-  if (trigger === 'update' || !token.tokenVersion) {
+  // Appels suivants : vérifier que tokenVersion n'a pas été incrémenté
+  if (token.id) {
     const dbUser = await prisma.user.findUnique({
       where: { id: token.id as string },
-      select: { tokenVersion: true }
+      select: { tokenVersion: true },
     })
-    if (dbUser && dbUser.tokenVersion !== token.tokenVersion) {
-      return null  // invalide le token
-    }
+    if (!dbUser || dbUser.tokenVersion !== token.tokenVersion) return null
   }
   return token
 }
 ```
 
+Note : la vérification se fait à **chaque appel** du callback (pas seulement sur `trigger === 'update'`). Cela implique 1 requête DB par vérification de token — acceptable pour un projet à faible trafic.
+
 ## Tests
 
-- `tests/unit/actions/profile.test.ts` — updateProfile, changePassword (bon mdp / mauvais mdp), deleteAccount
+Fichier : `tests/unit/actions/profile.test.ts` — 14 tests unitaires (Vitest, mocks Prisma + bcryptjs).
+
+| Suite | Cas couverts |
+|-------|-------------|
+| `updateProfile` | name+image, name seul, non connecté |
+| `changePassword` | non connecté, compte OAuth (password null), mdp actuel incorrect, nouveau mdp trop court (< 8 chars), succès |
+| `revokeAllSessions` | increment tokenVersion, non connecté |
+| `deleteAccount` | suppression, non connecté |
+| `exportData` | retourne favorites+readLater, non connecté (tableaux vides) |
+
 - Pas de test E2E (hors scope)
 
 ## Notes d'implémentation
