@@ -9,6 +9,17 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 
 ### Added
 
+- **Sidebar globale** : `AppSidebar` (dark gradient, rétractable, hamburger mobile) + `AppShell` layout wrapper — sidebar persistante sur toutes les pages sauf `/login` et `/register`. Navigation : Accueil, Statistiques, Notifications, Profil, Sécurité, Données, Historique, Suppression. Items settings pointent vers `/settings?s=<section>`. Collapse via bouton Réduire (desktop). `Suspense` + skeleton pour éviter le layout shift.
+
+### Changed
+
+- **DashboardClient — barre de recherche escamotable** : remplacement de la barre de recherche toujours visible par une icône loupe. Clic sur l'icône → la barre apparaît animée (expansion droite→gauche via `max-width: 0→100%` + `opacity`). Bouton toggle loupe/× avec style actif indigo. Touche Échap pour fermer. Autofocus à l'ouverture. Autocomplete repositionné hors du container `overflow-hidden` pour rester visible. Animation CSS pure (`transition-[max-width,opacity] duration-300`).
+- **Settings** : page `/settings` refactorisée — suppression de la sidebar locale (`SettingsSidebar`), navigation par URL param `?s=<section>` lue depuis `searchParams` (Server Component). `SettingsClient` simplifié en pur renderer de section.
+- **DashboardClient** : suppression du bouton ⚙️ (link `<Settings>` vers `/settings`) — navigation paramètres désormais via la sidebar globale. Header padding `pl-14 lg:pl-4` pour laisser la place au hamburger mobile.
+- **Settings** : page `/settings` accessible sans connexion — onglet Historique public (données localStorage), onglets Profil, Sécurité, Données et Zone Danger protégés par `AuthGate` (cadenas + lien `/login`) ; suppression du `redirect('/login')` côté serveur
+
+- **Settings** : page `/settings` (route protégée) avec 5 onglets — Profil (pseudo + photo URL), Sécurité (changement mdp + déconnexion tous appareils), Historique (ancien `SettingsDrawer` intégré), Données (export JSON favoris + read-later), Zone Danger (suppression compte avec confirmation "SUPPRIMER"). 5 Server Actions dans `src/actions/profile.ts` : `updateProfile`, `changePassword`, `revokeAllSessions`, `deleteAccount`, `exportData`. Champ mdp masqué pour les utilisateurs GitHub OAuth (`hasPassword` vérifié côté serveur). 14 tests unitaires. `SettingsDrawer` supprimé.
+
 - **Auth + Sync Cloud** : authentification GitHub OAuth + email/password (NextAuth v5), synchronisation cloud des données utilisateur (Prisma 6 → Neon PostgreSQL). Pattern Adapter : `LocalStorageAdapter` (anonyme) et `CloudAdapter` (connecté). Migration automatique localStorage → cloud à l'inscription. Pages `/login` et `/register`. Bouton login/logout dans le header.
 
 - **SourceIcon** : nouveau composant `SourceIcon` — icône vectorielle par source (`simple-icons` inline pour github/devto/hackernews via `getIconData`, lucide `Package` pour github-release, lucide `Rss` pour rss)
@@ -73,4 +84,5 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 
 ### BDD
 
+- **Settings** : ajout de `tokenVersion Int @default(0)` sur le modèle `User` — permet l'invalidation des JWT en circulation via `prisma db push` (ajout de colonne avec défaut, non destructif).
 - **Auth + Sync Cloud** : schéma Prisma 6 ajouté — 11 modèles (User, Account, Session, VerificationToken, Favorite, ReadLater, HistoryEntry, WatchedRepo, WatchedFeed, UserPreferences, RecentSearch) sur Neon PostgreSQL. Remplace l'absence de BDD du MVP (ADR-003 superseded).

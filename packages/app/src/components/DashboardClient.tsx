@@ -1,18 +1,19 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, Settings, X, Zap, Newspaper, Bookmark, Star } from 'lucide-react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { Search, X, Newspaper, Bookmark, Star, RefreshCw } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type { TechItem } from '@/types'
 import { TechCard } from './TechCard'
 import { FilterPanel } from './FilterPanel'
 import { ThemeToggle } from './ThemeToggle'
-import { SettingsDrawer } from './SettingsDrawer'
 import { useReadLater } from '@/hooks/useReadLater'
 import { useFavorites } from '@/hooks/useFavorites'
 import { useFilters } from '@/hooks/useFilters'
 import { useWatchedRepos } from '@/hooks/useWatchedRepos'
 import { useWatchedFeeds } from '@/hooks/useWatchedFeeds'
 import { useRecentSearches } from '@/hooks/useRecentSearches'
+import { useNotifications } from '@/hooks/useNotifications'
 import { PREDEFINED_TAGS } from '@/hooks/useFilters'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
@@ -22,10 +23,17 @@ type Tab = 'news' | 'readlater' | 'favorites'
 
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
 
+function itemRoute(item: TechItem): string {
+  if (item.source === 'devto') return `/article/${item.id}`
+  if (item.source === 'github') return `/repo/${item.id}`
+  return item.url
+}
+
 type Props = { initialItems: TechItem[] }
 
 export function DashboardClient({ initialItems }: Props) {
   const { data: session } = useSession()
+  const router = useRouter()
 
   const [activeTab, setActiveTab] = useState<Tab>('news')
   const [query, setQuery] = useState('')
@@ -35,9 +43,14 @@ export function DashboardClient({ initialItems }: Props) {
   const [asyncItems, setAsyncItems] = useState<TechItem[]>([])
   const [customReleases, setCustomReleases] = useState<TechItem[]>([])
   const [rssFeedItems, setRssFeedItems] = useState<TechItem[]>([])
-  const [showSettings, setShowSettings] = useState(false)
   const [showAutocomplete, setShowAutocomplete] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
   const autocompleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const { addNotification } = useNotifications()
 
   const { readLaterItems, addToReadLater, removeFromReadLater, isInReadLater } = useReadLater()
   const { favorites, addFavorite, removeFavorite, isFavorite } = useFavorites()
@@ -216,11 +229,70 @@ export function DashboardClient({ initialItems }: Props) {
     setSearchError(false)
   }
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setQuery('')
     setSearchResults(null)
     setSearchError(false)
-  }
+  }, [])
+
+  const toggleSearch = useCallback(() => {
+    setSearchOpen(prev => {
+      const next = !prev
+      if (!next) {
+        setQuery('')
+        setSearchResults(null)
+        setSearchError(false)
+        setShowAutocomplete(false)
+      } else {
+        setTimeout(() => inputRef.current?.focus(), 50)
+      }
+      return next
+    })
+  }, [])
+
+  const handleRefresh = useCallback(async (isAuto = false) => {
+    setIsRefreshing(true)
+    router.refresh()
+
+    const sources = ['/api/devto', '/api/hackernews', '/api/releases-default']
+    const newItems: TechItem[] = []
+
+    await Promise.allSettled(
+      sources.map(async url => {
+        try {
+          const data = await fetch(url).then(r => r.json() as Promise<TechItem[]>)
+          if (!Array.isArray(data)) return
+          setAsyncItems(prev => {
+            const existingIds = new Set(prev.map(i => i.id))
+            const fresh = data.filter(i => !existingIds.has(i.id))
+            if (fresh.length > 0) {
+              newItems.push(...fresh)
+              return [...prev, ...fresh]
+            }
+            return prev
+          })
+        } catch {}
+      })
+    )
+
+    setLastRefresh(new Date())
+    setIsRefreshing(false)
+
+    if (isAuto && newItems.length > 0) {
+      const href = newItems.length === 1 ? itemRoute(newItems[0]) : '/'
+      addNotification({
+        title: 'Nouveau contenu disponible',
+        body: `${newItems.length} article${newItems.length > 1 ? 's' : ''} ajouté${newItems.length > 1 ? 's' : ''}`,
+        href,
+      })
+    }
+  }, [router, addNotification])
+
+  // Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(() => { void handleRefresh(true) }, 5 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [handleRefresh])
 
   const tabs: { id: Tab; icon: React.ReactNode; label: string; count: number; activeClass: string }[] = [
     {
@@ -249,32 +321,49 @@ export function DashboardClient({ initialItems }: Props) {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
-      <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
-        <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 shrink-0 flex items-center gap-1">
-          <Zap size={14} />
-          Streamline
-        </span>
-        <div className="relative flex-1 min-w-0">
-          <Search
-            size={13}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
-          />
-          <input
-            type="search"
-            value={query}
-            onChange={e => handleQueryChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onFocus={() => setShowAutocomplete(true)}
-            onBlur={() => {
-              autocompleteTimeoutRef.current = setTimeout(() => setShowAutocomplete(false), 150)
-            }}
-            placeholder="Rechercher… (Entrée = recherche étendue)"
-            className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-300 dark:focus:ring-indigo-700"
-          />
-          {/* Autocomplete dropdown */}
+      <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 pr-4 pl-14 lg:pl-4 py-3 flex items-center gap-2 sticky top-0 z-10 shadow-sm">
+        {/* Left title + animated search bar */}
+        <div className="relative flex-1 min-w-0 flex items-center">
+          {/* Sidebar section name — always visible */}
+          <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 truncate">
+            Accueil
+          </span>
+
+          {/* Inner: ml-auto pushes to right, max-width 0→50% animates right→left */}
+          <div
+            className={`ml-auto w-full overflow-hidden transition-[max-width,opacity] duration-300 ease-in-out ${
+              searchOpen
+                ? 'max-w-[50%] opacity-100'
+                : 'max-w-0 opacity-0 pointer-events-none'
+            }`}
+          >
+            <div className="relative">
+              <Search
+                size={13}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none"
+              />
+              <input
+                ref={inputRef}
+                type="search"
+                value={query}
+                onChange={e => handleQueryChange(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Escape') { toggleSearch(); return }
+                  handleKeyDown(e)
+                }}
+                onFocus={() => setShowAutocomplete(true)}
+                onBlur={() => {
+                  autocompleteTimeoutRef.current = setTimeout(() => setShowAutocomplete(false), 150)
+                }}
+                placeholder="Rechercher… (Entrée = recherche étendue)"
+                className="w-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg pl-8 pr-3 py-2 text-sm text-zinc-700 dark:text-zinc-200 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:border-indigo-400 dark:focus:border-indigo-500"
+              />
+            </div>
+          </div>
+          {/* Autocomplete — aligned under the search bar (right-anchored, 50% wide) */}
           {showAutocomplete && autocompleteItems.length > 0 && (
             <div
-              className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-50 overflow-hidden"
+              className="absolute top-full right-0 w-[50%] mt-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-50 overflow-hidden"
               onMouseDown={e => {
                 e.preventDefault()
                 if (autocompleteTimeoutRef.current) clearTimeout(autocompleteTimeoutRef.current)
@@ -288,10 +377,14 @@ export function DashboardClient({ initialItems }: Props) {
                 </div>
               )}
               {autocompleteItems.map((item, i) => (
-                <button
+                <div
                   key={i}
+                  role="option"
+                  aria-selected={false}
+                  tabIndex={0}
                   onClick={() => applyAutocomplete(item.value)}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') applyAutocomplete(item.value) }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
                 >
                   <span className="text-zinc-300 dark:text-zinc-600 shrink-0 text-xs w-4">
                     {item.type === 'search' ? '🕐' : item.type === 'tag' ? '#' : '→'}
@@ -308,56 +401,72 @@ export function DashboardClient({ initialItems }: Props) {
                       <X size={10} />
                     </button>
                   )}
-                </button>
+                </div>
               ))}
             </div>
           )}
         </div>
+
         {searching && (
           <span className="text-xs text-zinc-400 shrink-0">Recherche…</span>
         )}
-        <button
-          onClick={() => setShowSettings(true)}
-          className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
-          title="Historique"
-        >
-          <Settings size={14} />
-        </button>
-        <ThemeToggle />
-        {session?.user ? (
-          <div className="flex items-center gap-2">
-            {session.user.image ? (
-              <Image
-                src={session.user.image}
-                alt={session.user.name ?? 'Avatar'}
-                width={28}
-                height={28}
-                className="rounded-full"
-              />
-            ) : (
-              <div className="w-7 h-7 rounded-full bg-zinc-300 dark:bg-zinc-600 flex items-center justify-center text-xs font-medium">
-                {(session.user.name ?? session.user.email ?? '?')[0].toUpperCase()}
-              </div>
-            )}
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
-            >
-              Déconnexion
-            </button>
-          </div>
-        ) : (
-          <Link
-            href="/login"
-            className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-          >
-            Se connecter
-          </Link>
-        )}
-      </header>
 
-      {/* Settings drawer */}
-      {showSettings && <SettingsDrawer onClose={() => setShowSettings(false)} />}
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          {/* Refresh button */}
+          <button
+            onClick={() => { void handleRefresh(false) }}
+            title={lastRefresh ? `Dernière maj : ${lastRefresh.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : 'Rafraîchir'}
+            disabled={isRefreshing}
+            className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors disabled:opacity-40"
+          >
+            <RefreshCw size={14} className={isRefreshing ? 'animate-spin' : ''} />
+          </button>
+
+          {/* Search toggle button */}
+          <button
+            onClick={toggleSearch}
+            title={searchOpen ? 'Fermer la recherche' : 'Rechercher'}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
+              searchOpen
+                ? 'bg-indigo-100 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'
+                : 'border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700'
+            }`}
+          >
+            {searchOpen ? <X size={14} /> : <Search size={14} />}
+          </button>
+
+          <ThemeToggle />
+
+          {session?.user ? (
+            <Link
+              href="/settings?s=profile"
+              title={session.user.name ?? 'Mon profil'}
+              className="hover:ring-2 hover:ring-indigo-500 rounded-full transition-all"
+            >
+              {session.user.image ? (
+                <Image
+                  src={session.user.image}
+                  alt={session.user.name ?? 'Avatar'}
+                  width={28}
+                  height={28}
+                  className="rounded-full"
+                />
+              ) : (
+                <div className="w-7 h-7 rounded-full bg-zinc-300 dark:bg-zinc-600 flex items-center justify-center text-xs font-medium">
+                  {(session.user.name ?? session.user.email ?? '?')[0].toUpperCase()}
+                </div>
+              )}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="text-xs px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              Se connecter
+            </Link>
+          )}
+        </div>
+      </header>
 
       {/* Tabs */}
       <div className="bg-white dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 px-3 py-2 flex gap-1.5 flex-wrap">
