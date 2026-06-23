@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, Settings, X, Zap, Newspaper, Bookmark, Star } from 'lucide-react'
+import { Search, X, Zap, Newspaper, Bookmark, Star } from 'lucide-react'
 import type { TechItem } from '@/types'
 import { TechCard } from './TechCard'
 import { FilterPanel } from './FilterPanel'
@@ -247,7 +247,7 @@ export function DashboardClient({ initialItems }: Props) {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
       {/* Header */}
-      <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 px-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
+      <header className="bg-white/90 dark:bg-zinc-900/90 backdrop-blur-sm border-b border-zinc-200 dark:border-zinc-800 pr-4 pl-14 lg:pl-4 py-3 flex items-center gap-3 sticky top-0 z-10 shadow-sm">
         <span className="text-sm font-extrabold text-indigo-600 dark:text-indigo-400 shrink-0 flex items-center gap-1">
           <Zap size={14} />
           Streamline
@@ -314,13 +314,6 @@ export function DashboardClient({ initialItems }: Props) {
         {searching && (
           <span className="text-xs text-zinc-400 shrink-0">Recherche…</span>
         )}
-        <Link
-          href="/settings"
-          className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors shrink-0"
-          title="Paramètres"
-        >
-          <Settings size={14} />
-        </Link>
         <ThemeToggle />
         {session?.user ? (
           <div className="flex items-center gap-2">

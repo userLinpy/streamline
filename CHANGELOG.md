@@ -7,11 +7,15 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/) · Versioning 
 
 ## [Unreleased]
 
+### Added
+
+- **Sidebar globale** : `AppSidebar` (dark gradient, rétractable, hamburger mobile) + `AppShell` layout wrapper — sidebar persistante sur toutes les pages sauf `/login` et `/register`. Navigation : Accueil, Statistiques, Notifications, Profil, Sécurité, Données, Historique, Suppression. Items settings pointent vers `/settings?s=<section>`. Collapse via bouton Réduire (desktop). `Suspense` + skeleton pour éviter le layout shift.
+
 ### Changed
 
+- **Settings** : page `/settings` refactorisée — suppression de la sidebar locale (`SettingsSidebar`), navigation par URL param `?s=<section>` lue depuis `searchParams` (Server Component). `SettingsClient` simplifié en pur renderer de section.
+- **DashboardClient** : suppression du bouton ⚙️ (link `<Settings>` vers `/settings`) — navigation paramètres désormais via la sidebar globale. Header padding `pl-14 lg:pl-4` pour laisser la place au hamburger mobile.
 - **Settings** : page `/settings` accessible sans connexion — onglet Historique public (données localStorage), onglets Profil, Sécurité, Données et Zone Danger protégés par `AuthGate` (cadenas + lien `/login`) ; suppression du `redirect('/login')` côté serveur
-
-### Added
 
 - **Settings** : page `/settings` (route protégée) avec 5 onglets — Profil (pseudo + photo URL), Sécurité (changement mdp + déconnexion tous appareils), Historique (ancien `SettingsDrawer` intégré), Données (export JSON favoris + read-later), Zone Danger (suppression compte avec confirmation "SUPPRIMER"). 5 Server Actions dans `src/actions/profile.ts` : `updateProfile`, `changePassword`, `revokeAllSessions`, `deleteAccount`, `exportData`. Champ mdp masqué pour les utilisateurs GitHub OAuth (`hasPassword` vérifié côté serveur). 14 tests unitaires. `SettingsDrawer` supprimé.
 
